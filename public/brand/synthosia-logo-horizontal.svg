@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 280" role="img" aria-labelledby="title desc">
+  <title id="title">Synthosia logo</title>
+  <desc id="desc">Horizontal Synthosia logo with symbol and wordmark.</desc>
+  <defs>
+    <linearGradient id="brandA" x1="28" y1="24" x2="232" y2="252" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d946ef"/>
+      <stop offset="0.48" stop-color="#7c3aed"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(26 22) scale(.46)">
+    <path fill="url(#brandA)" d="M254 40 430 142v86l-72 42v-84L254 126 154 184l204 118v78L254 442 78 340v-86l72-42v84l104 60 100-58L150 180v-78L254 40Z"/>
+    <path fill="#050509" fill-opacity="0.88" d="M202 182h86l-68 80h-86l68-80Zm88 68h86l-68 80h-86l68-80Z"/>
+  </g>
+  <text x="280" y="128" fill="currentColor" font-size="82" font-family="Space Grotesk, system-ui, sans-serif" font-weight="700" letter-spacing="-4">Synthosia</text>
+  <text x="284" y="185" fill="#7c3aed" font-size="34" font-family="Space Grotesk, system-ui, sans-serif" font-weight="600">by SorPuti</text>
+  <path d="M284 198h140M560 198h140" stroke="#7c3aed" stroke-width="4" stroke-linecap="round" opacity=".7"/>
+</svg>

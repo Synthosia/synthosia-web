@@ -11,4 +11,7 @@ export type Project = {
   githubUrl: string;
   category: ProjectCategory;
   featured: boolean;
+  translations?: {
+    "pt-BR"?: Pick<Project, "tagline" | "description" | "features">;
+  };
 };

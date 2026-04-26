@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/product-card";
 import { ProjectCard } from "@/components/project-card";
 import { SectionHeading } from "@/components/section-heading";
 import { getGithubRepositories } from "@/lib/github";
+import { platformConfig } from "@/lib/platform-config";
 import { getFeaturedProjects } from "@/lib/projects";
 
 export default async function HomePage() {
@@ -14,62 +15,72 @@ export default async function HomePage() {
 
   return (
     <div className="pb-12">
-      <section className="border-b border-[rgba(38,37,30,0.1)] py-20 sm:py-28">
+      <section className="border-b border-white/10 py-20 sm:py-28">
         <Container>
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
             <div className="space-y-6">
-              <p className="font-display text-xs uppercase tracking-[0.08em] text-[rgba(38,37,30,0.6)]">
-                Synthosia by SorPuti
+              <p className="font-display text-xs uppercase tracking-[0.08em] text-violet-200/70">
+                Synthosia Developer Platform
               </p>
-              <h1 className="hero-text text-balance font-display text-[2.8rem] leading-[1.05] text-[#26251e] sm:text-[4.5rem]">
-                Build the future with AI-native tools
+              <h1 className="hero-text text-balance font-display text-[2.8rem] leading-[1.05] text-[#f7f4ff] sm:text-[4.5rem]">
+                AI-native platform for building scalable systems
               </h1>
-              <p className="max-w-[52ch] text-pretty font-serif text-[1.2rem] leading-[1.5] text-[rgba(38,37,30,0.78)]">
-                A unified platform where language, backend framework, and open-source
-                tools are designed as one system for modern products.
+              <p className="max-w-[56ch] text-pretty font-serif text-[1.2rem] leading-[1.5] text-white/72">
+                A unified ecosystem where programming language, backend framework,
+                CLI, integrations, and open-source tools work as one developer platform.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
-                  href="/platform"
-                  className="rounded-lg bg-[#ebeae5] px-4 py-2.5 font-display text-sm text-[#26251e] transition-colors duration-150 ease-out hover:text-[#cf2d56]"
+                  href="/get-started"
+                  className="rounded-lg bg-violet-200 px-4 py-2.5 font-display text-sm text-[#09070f] transition-colors duration-150 ease-out hover:bg-white"
                 >
-                  Explore Platform
+                  Get Started
                 </Link>
                 <Link
-                  href="/opensource"
-                  className="rounded-lg border border-[rgba(38,37,30,0.1)] bg-[#f7f7f4] px-4 py-2.5 font-display text-sm text-[#26251e] transition-colors duration-150 ease-out hover:text-[#f54e00]"
+                  href="/docs"
+                  className="rounded-lg border border-white/10 bg-[#12111a] px-4 py-2.5 font-display text-sm text-white transition-colors duration-150 ease-out hover:text-violet-200"
                 >
-                  View Projects
+                  Docs
+                </Link>
+                <Link
+                  href="/platform"
+                  className="rounded-lg border border-white/10 bg-transparent px-4 py-2.5 font-display text-sm text-white/74 transition-colors duration-150 ease-out hover:text-white"
+                >
+                  View Platform
                 </Link>
               </div>
             </div>
-            <div className="rounded-[10px] border border-[rgba(38,37,30,0.1)] bg-[#e6e5e0] p-6">
-              <p className="font-display text-xs uppercase tracking-[0.08em] text-[rgba(38,37,30,0.55)]">
-                Ecosystem Signal
+            <div className="rounded-[10px] border border-white/10 bg-[#0d0c13] p-6 shadow-[0_28px_70px_rgba(0,0,0,0.36)]">
+              <p className="font-display text-xs uppercase tracking-[0.08em] text-blue-200/70">
+                Platform Console
               </p>
-              <p className="mt-4 font-serif text-[1.08rem] leading-[1.45] text-[rgba(38,37,30,0.8)]">
-                Language-level AI, framework-level scale, and tool-level velocity.
-                Every layer amplifies the next.
+              <p className="mt-4 font-serif text-[1.08rem] leading-[1.45] text-white/72">
+                One account connects projects, API keys, integrations, CLI sessions,
+                documentation, and open-source releases.
               </p>
               <div className="mt-6 grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-lg bg-[#f2f1ed] px-2 py-3">
-                  <p className="font-display text-lg tabular-nums text-[#26251e]">3</p>
-                  <p className="font-display text-[11px] uppercase text-[rgba(38,37,30,0.58)]">
-                    Core Lines
+                <div className="rounded-lg bg-[#12111a] px-2 py-3">
+                  <p className="font-display text-lg tabular-nums text-white">4</p>
+                  <p className="font-display text-[11px] uppercase text-white/52">
+                    Platform Areas
                   </p>
                 </div>
-                <div className="rounded-lg bg-[#f2f1ed] px-2 py-3">
-                  <p className="font-display text-lg tabular-nums text-[#26251e]">6+</p>
-                  <p className="font-display text-[11px] uppercase text-[rgba(38,37,30,0.58)]">
+                <div className="rounded-lg bg-[#12111a] px-2 py-3">
+                  <p className="font-display text-lg tabular-nums text-white">6+</p>
+                  <p className="font-display text-[11px] uppercase text-white/52">
                     Projects
                   </p>
                 </div>
-                <div className="rounded-lg bg-[#f2f1ed] px-2 py-3">
-                  <p className="font-display text-lg tabular-nums text-[#26251e]">1</p>
-                  <p className="font-display text-[11px] uppercase text-[rgba(38,37,30,0.58)]">
-                    Platform Vision
+                <div className="rounded-lg bg-[#12111a] px-2 py-3">
+                  <p className="font-display text-lg tabular-nums text-white">DX</p>
+                  <p className="font-display text-[11px] uppercase text-white/52">
+                    First
                   </p>
                 </div>
+              </div>
+              <div className="mt-5 rounded-lg border border-white/10 bg-[#050509] p-4 font-mono text-[12px] leading-[1.67] text-white/70">
+                <p><span className="text-violet-200">$</span> {platformConfig.cli.command} init api</p>
+                <p><span className="text-blue-200">sync</span> language -&gt; framework -&gt; integrations</p>
               </div>
             </div>
           </div>
@@ -81,24 +92,24 @@ export default async function HomePage() {
           <SectionHeading
             eyebrow="Core Products"
             title="Plex + Strider + Tooling OSS"
-            description="O ecossistema é composto por produtos conectados, com papéis claros e integração entre camadas."
+            description="The ecosystem is made of connected products with clear roles across language, framework, tools, and account workflows."
           />
           <div className="grid gap-4 md:grid-cols-3">
             <ProductCard
               title="Plex Language"
-              description="Linguagem e toolchain Rust com checker, runtime, CLI e LSP para fluxos AI-native."
+              description="Rust language and toolchain with checker, runtime, CLI, and LSP for AI-native workflows."
               href="/language"
               tone="language"
             />
             <ProductCard
               title="Strider Framework"
-              description="Framework backend Python com ergonomia estilo Django e performance async inspirada no FastAPI."
+              description="Python backend framework with Django-style ergonomics and FastAPI-inspired async performance."
               href="/framework"
               tone="framework"
             />
             <ProductCard
               title="MCP + Open Source Tools"
-              description="MCP Server, workers, integrações e utilitários que sustentam operação e evolução da plataforma."
+              description="MCP Server, workers, integrations, and utilities that support platform operations and evolution."
               href="/opensource"
               tone="tools"
             />
@@ -106,11 +117,11 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      <section className="border-y border-[rgba(38,37,30,0.1)] bg-[#ebeae5] py-16">
+      <section className="border-y border-white/10 bg-[#08070d] py-16">
         <Container>
-          <blockquote className="max-w-3xl text-balance font-display text-[2rem] leading-[1.15] tracking-[-0.72px] text-[#26251e] sm:text-[2.25rem]">
-            We do not build isolated apps. We design evolvable systems where AI,
-            backend architecture, and tooling move as one product organism.
+          <blockquote className="max-w-3xl text-balance font-display text-[2rem] leading-[1.15] tracking-[-0.72px] text-[#f7f4ff] sm:text-[2.25rem]">
+            Learn in the docs, build with the language and framework, manage from
+            account surfaces, and extend through open source.
           </blockquote>
         </Container>
       </section>
@@ -141,21 +152,21 @@ export default async function HomePage() {
               githubRepositories.map((repository) => (
                 <article
                   key={repository.id}
-                  className="rounded-lg border border-[rgba(38,37,30,0.1)] bg-[#f7f7f4] p-4"
+                  className="rounded-lg border border-white/10 bg-[#0d0c13] p-4"
                 >
-                  <h3 className="font-display text-lg text-[#26251e]">{repository.name}</h3>
-                  <p className="mt-1 font-serif text-[1rem] text-[rgba(38,37,30,0.72)]">
+                  <h3 className="font-display text-lg text-[#f7f4ff]">{repository.name}</h3>
+                  <p className="mt-1 font-serif text-[1rem] text-white/68">
                     {repository.description ?? "No description provided yet."}
                   </p>
                   <div className="mt-3 flex items-center justify-between">
-                    <p className="font-mono text-xs tabular-nums text-[rgba(38,37,30,0.6)]">
+                    <p className="font-mono text-xs tabular-nums text-white/58">
                       Stars {repository.stargazers_count}
                     </p>
                     <Link
                       href={repository.html_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-display text-sm text-[#f54e00] transition-colors duration-150 ease-out hover:text-[#cf2d56]"
+                      className="font-display text-sm text-blue-200 transition-colors duration-150 ease-out hover:text-white"
                     >
                       Open repo
                     </Link>
@@ -163,9 +174,9 @@ export default async function HomePage() {
                 </article>
               ))
             ) : (
-              <article className="rounded-lg border border-[rgba(38,37,30,0.1)] bg-[#f7f7f4] p-5">
-                <p className="font-display text-base text-[#26251e]">GitHub integration ready.</p>
-                <p className="mt-2 font-serif text-[1rem] text-[rgba(38,37,30,0.72)]">
+              <article className="rounded-lg border border-white/10 bg-[#0d0c13] p-5">
+                <p className="font-display text-base text-[#f7f4ff]">GitHub integration ready.</p>
+                <p className="mt-2 font-serif text-[1rem] text-white/68">
                   Set GITHUB_USERNAME and optional GITHUB_TOKEN to fetch live repositories.
                 </p>
               </article>

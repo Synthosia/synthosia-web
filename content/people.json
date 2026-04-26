@@ -1,0 +1,14 @@
+{
+  "founder": {
+    "username": "SorPuti",
+    "role": "Founder",
+    "focus": "AI-native language, backend framework, developer platform and open-source tooling.",
+    "description": "Founder of Synthosia and builder of the platform vision: a connected ecosystem where language, framework, account, CLI, documentation, and open-source tooling work as one product.",
+    "details": [
+      "Designs the core architecture and developer experience.",
+      "Builds the language, framework, docs engine, and account workflows.",
+      "Keeps Synthosia focused on product-grade platform primitives instead of portfolio-style presentation."
+    ]
+  },
+  "contributors": []
+}
