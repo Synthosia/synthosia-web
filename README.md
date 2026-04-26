@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Synthosia Ecosystem
 
-## Getting Started
+Modern website built with Next.js App Router to represent Synthosia — a founder-led AI-native product ecosystem by SorPuti (Lucas):
 
-First, run the development server:
+- **Plex Language** (AI-native language/toolchain built in Rust)
+- **Strider Framework** from core-framework (Django-inspired ergonomics + FastAPI performance)
+- **Open-source tools** and experimental projects
+
+## Stack
+
+- Next.js 16 (App Router)
+- TypeScript
+- Tailwind CSS 4
+- Image optimization with Next.js Image
+- Component-based architecture
+- Dynamic project pages via slug
+- GitHub API integration for repository discovery and real-time sync
+
+## Routes
+
+- `/` Home ecosystem landing
+- `/platform` Ecosystem architecture and connection flow
+- `/language` AI-native language overview
+- `/framework` Backend framework positioning and benchmarks
+- `/opensource` Filterable/searchable open source hub
+- `/projects/[slug]` Dynamic project details
+- `/about` SorPuti: founder identity, vision, and ecosystem philosophy
+
+## Local Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## GitHub Integration
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Optional environment variables:
 
-## Learn More
+```bash
+GITHUB_USERNAME=SorPuti
+GITHUB_TOKEN=ghp_xxx_optional_for_rate_limits
+```
 
-To learn more about Next.js, take a look at the following resources:
+- `GITHUB_USERNAME` controls which repos are fetched for the GitHub Live section.
+- `GITHUB_TOKEN` is optional and helps avoid strict API rate limits.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Domain
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Deployed at **synthosia.com**
 
-## Deploy on Vercel
+## Architecture Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Reusable UI components live in `components/`.
+- Data model and project content live in `lib/projects.ts` and `types/project.ts`.
+- GitHub fetching and caching logic lives in `lib/github.ts`.
+- The foundation is CMS-ready: project data is centralized and can be swapped for MDX/CMS sources later.

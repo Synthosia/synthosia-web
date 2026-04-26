@@ -1,26 +1,180 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #02030a;
+  --foreground: #f7f7ff;
+  --muted: #a8a8c8;
+  --surface-100: #080a16;
+  --surface-200: #0d1020;
+  --surface-300: #13172b;
+  --surface-400: #1a1f38;
+  --surface-500: #252b49;
+  --accent: #9d35ff;
+  --accent-blue: #2f6cff;
+  --accent-cyan: #45f0d4;
+  --error: #ff4f8b;
+  --success: #45f0a8;
+  --border-soft: rgba(154, 162, 255, 0.18);
+  --border-strong: rgba(183, 104, 255, 0.42);
+  --shadow-glow: 0 0 34px rgba(110, 58, 255, 0.22);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border-soft);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-display), "Space Grotesk", system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  content: "";
+  background:
+    radial-gradient(circle at 15% 12%, rgba(112, 43, 255, 0.2), transparent 28rem),
+    radial-gradient(circle at 84% 2%, rgba(48, 109, 255, 0.18), transparent 24rem),
+    linear-gradient(180deg, #03040b 0%, #02030a 46%, #010107 100%);
+}
+
+body::after {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  opacity: 0.38;
+  background-image:
+    linear-gradient(rgba(154, 162, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(154, 162, 255, 0.055) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+  animation: grid-drift 18s linear infinite;
+}
+
+.font-display {
+  font-family: var(--font-display), "Space Grotesk", system-ui, sans-serif;
+}
+
+.font-serif {
+  font-family: var(--font-serif), "Lora", Georgia, serif;
+  font-feature-settings: "liga" 1, "kern" 1;
+}
+
+.font-mono {
+  font-family: var(--font-mono), "JetBrains Mono", ui-monospace, monospace;
+}
+
+.hero-text {
+  letter-spacing: -2.16px;
+}
+
+@media (max-width: 768px) {
+  .hero-text {
+    letter-spacing: -0.72px;
+  }
+}
+
+.platform-shell {
+  position: relative;
+  overflow: hidden;
+}
+
+.platform-shell::before {
+  position: absolute;
+  inset: -20%;
+  z-index: -1;
+  content: "";
+  background:
+    radial-gradient(circle at 18% 40%, rgba(157, 53, 255, 0.18), transparent 24rem),
+    radial-gradient(circle at 78% 35%, rgba(47, 108, 255, 0.16), transparent 24rem);
+  filter: blur(18px);
+  animation: orbital-glow 14s ease-in-out infinite alternate;
+}
+
+.glass-panel {
+  border: 1px solid var(--border-soft);
+  background: rgba(8, 10, 22, 0.76);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(18px);
+}
+
+.brand-gradient-text {
+  background: linear-gradient(135deg, #ffffff 18%, #b86bff 52%, #3f7dff 92%);
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-orbit {
+  animation: orbit-pulse 6s ease-in-out infinite;
+}
+
+.fade-slide {
+  animation: fade-slide 520ms ease-out both;
+}
+
+@keyframes grid-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(54px, 54px, 0);
+  }
+}
+
+@keyframes orbital-glow {
+  from {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+    opacity: 0.72;
+  }
+  to {
+    transform: translate3d(2%, 1%, 0) scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes orbit-pulse {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.72;
+  }
+  50% {
+    transform: translate3d(0, -8px, 0) scale(1.03);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-slide {
+  from {
+    transform: translate3d(0, 18px, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
