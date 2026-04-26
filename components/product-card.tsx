@@ -8,26 +8,24 @@ type ProductCardProps = {
 };
 
 const toneClassMap = {
-  language: "border-violet-300/35 bg-violet-500/15 text-violet-100",
-  framework: "border-blue-300/35 bg-blue-500/15 text-blue-100",
-  tools: "border-cyan-300/35 bg-cyan-500/15 text-cyan-100",
+  language: "bg-[#dfa88f]/35",
+  framework: "bg-[#9fbbe0]/35",
+  tools: "bg-[#9fc9a2]/35",
 };
 
 export function ProductCard({ title, description, href, tone }: ProductCardProps) {
   return (
-    <article className="group glass-panel rounded-[16px] p-6 transition-transform duration-150 ease-out hover:-translate-y-1">
-      <div className={`mb-5 grid size-11 place-items-center rounded-2xl border ${toneClassMap[tone]}`}>
-        <span className="font-mono text-xs uppercase">{tone.slice(0, 2)}</span>
-      </div>
-      <h3 className="text-balance font-display text-[1.38rem] leading-[1.2] text-white">
+    <article className="group rounded-[10px] border border-[rgba(38,37,30,0.1)] bg-[#e6e5e0] p-6 shadow-sm transition-shadow duration-200 ease-out hover:shadow-lg">
+      <div className={`mb-5 h-2.5 w-16 rounded-full ${toneClassMap[tone]}`} />
+      <h3 className="text-balance font-display text-[1.38rem] leading-[1.2] tracking-[-0.11px] text-[#26251e]">
         {title}
       </h3>
-      <p className="mt-3 text-pretty font-serif text-[1.02rem] leading-[1.5] text-slate-400">
+      <p className="mt-3 text-pretty font-serif text-[1.02rem] leading-[1.5] text-[rgba(38,37,30,0.7)]">
         {description}
       </p>
       <Link
         href={href}
-        className="mt-5 inline-flex rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-display text-sm text-slate-100 transition-colors duration-150 ease-out hover:border-violet-300/45 hover:text-white"
+        className="mt-5 inline-flex rounded-lg border border-[rgba(38,37,30,0.1)] bg-[#ebeae5] px-3 py-2 font-display text-sm text-[#26251e] transition-colors duration-150 ease-out hover:text-[#cf2d56]"
       >
         Learn more
       </Link>

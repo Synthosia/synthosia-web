@@ -25,22 +25,22 @@ const monoFont = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://synthosia.com"),
   title: {
-    default: "Synthosia | AI-Native Developer Platform",
+    default: "Synthosia | AI-Native Tech Ecosystem",
     template: "%s | Synthosia",
   },
   description:
-    "AI-native developer platform with a programming language, scalable backend framework, CLI, integrations, and open-source tools.",
+    "Founder-led by SorPuti. An AI-native programming language, async backend framework, and open-source tools for scalable systems.",
   openGraph: {
-    title: "Synthosia | AI-Native Developer Platform",
+    title: "Synthosia | AI-Native Tech Ecosystem",
     description:
-      "Build scalable systems with a unified language, framework, CLI, integrations, and open-source platform.",
+      "Build the future with AI-native tools across language, framework, and open-source products.",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
     title: "Synthosia",
-    description: "AI-native platform for building scalable systems.",
+    description: "Build the future with AI-native tools.",
   },
 };
 
@@ -54,10 +54,10 @@ export default function RootLayout({
       lang="en"
       className={`${displayFont.variable} ${serifFont.variable} ${monoFont.variable} antialiased`}
     >
-      <body className="min-h-dvh bg-background text-foreground">
-        <div className="platform-shell flex min-h-dvh flex-col">
+      <body className="min-h-dvh bg-[#f2f1ed] text-[#26251e]">
+        <div className="flex min-h-dvh flex-col">
           <SiteHeader />
-          <main className="flex-1 fade-slide">{children}</main>
+          <main className="flex-1">{children}</main>
           <SiteFooter />
         </div>
       </body>
