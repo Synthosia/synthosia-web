@@ -1,0 +1,1793 @@
+{
+  "categories": [
+    {
+      "title": "Getting Started",
+      "entries": [
+        "installation",
+        "setup",
+        "first-project"
+      ]
+    },
+    {
+      "title": "Language",
+      "entries": [
+        "syntax",
+        "ai-features",
+        "examples"
+      ]
+    },
+    {
+      "title": "Framework",
+      "entries": [
+        "routing",
+        "models",
+        "admin-panel",
+        "scaling"
+      ]
+    },
+    {
+      "title": "CLI",
+      "entries": [
+        "cli-installation",
+        "commands",
+        "project-management"
+      ]
+    },
+    {
+      "title": "Integrations",
+      "entries": [
+        "authentication",
+        "api-keys",
+        "external-services"
+      ]
+    },
+    {
+      "title": "Account & Platform",
+      "entries": [
+        "login",
+        "connecting-projects",
+        "account-workspace"
+      ]
+    }
+  ],
+  "docs": [
+    {
+      "slug": "installation",
+      "title": "Installation",
+      "category": "Getting Started",
+      "description": "Install the CLI and prepare the local toolchain.",
+      "body": [
+        "Installation starts from the global CLI because Synthosia treats local development, documentation, project linking, and integrations as one workflow.",
+        "The installer validates Node, package manager state, account readiness, and the short {{cli.command}} command before a project is created.",
+        "Use this page as the entry point for onboarding a new machine or CI environment into the ecosystem."
+      ],
+      "widgets": [
+        {
+          "type": "code",
+          "label": "Terminal",
+          "value": "{{cli.installCommand}}\n{{cli.command}} doctor"
+        },
+        {
+          "type": "callout",
+          "title": "Configurable page",
+          "body": "This page comes from content/docs.json. Remove or add widgets in JSON and the route updates automatically.",
+          "tone": "violet"
+        },
+        {
+          "type": "video",
+          "title": "Installation walkthrough",
+          "body": "Reserved for an onboarding video, recorded demo, or external embed when the content exists.",
+          "href": "https://example.com/synthosia-installation",
+          "duration": "04:30"
+        },
+        {
+          "type": "githubProfile",
+          "username": "SorPuti",
+          "role": "Founder & Builder",
+          "focus": "Responsible for the Synthosia platform architecture, Plex language, Strider framework, and open-source ecosystem tools.",
+          "relatedProjects": [
+            "plex-lang",
+            "strider-framework",
+            "core-framework-mcp-server"
+          ],
+          "repositoryLimit": 4
+        },
+        {
+          "type": "projectGrid",
+          "title": "Products touched by installation",
+          "body": "A clean install prepares the command layer, language toolchain, framework scaffolds, and docs engine together.",
+          "projects": [
+            "plex-lang",
+            "strider-framework",
+            "core-framework-mcp-server"
+          ]
+        },
+        {
+          "type": "links",
+          "title": "Install related pages",
+          "items": [
+            {
+              "label": "Setup",
+              "href": "/docs/setup"
+            },
+            {
+              "label": "CLI installation",
+              "href": "/docs/cli-installation"
+            },
+            {
+              "label": "First project",
+              "href": "/docs/first-project"
+            }
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Instalação",
+          "description": "Instale a CLI e prepare a toolchain local.",
+          "body": [
+            "A instalação começa pela CLI global porque a Synthosia trata desenvolvimento local, documentação, vínculo de projetos e integrações como um único fluxo.",
+            "O instalador valida Node, estado do gerenciador de pacotes, preparação da conta e o comando curto {{cli.command}} antes da criação de um projeto.",
+            "Use esta página como ponto de entrada para integrar uma nova máquina ou ambiente de CI ao ecossistema."
+          ],
+          "widgets": [
+            {
+              "type": "code",
+              "label": "Terminal",
+              "value": "{{cli.installCommand}}\n{{cli.command}} doctor"
+            },
+            {
+              "type": "callout",
+              "title": "Página configurável",
+              "body": "Esta página vem de content/docs.json. Remova ou adicione widgets no JSON e a rota atualiza automaticamente.",
+              "tone": "violet"
+            },
+            {
+              "type": "video",
+              "title": "Walkthrough de instalação",
+              "body": "Reservado para um vídeo de onboarding, demo gravada ou embed externo quando o conteúdo existir.",
+              "href": "https://example.com/synthosia-installation",
+              "duration": "04:30"
+            },
+            {
+              "type": "githubProfile",
+              "username": "SorPuti",
+              "role": "Fundador e Builder",
+              "focus": "Responsável pela arquitetura da plataforma Synthosia, linguagem Plex, framework Strider e ferramentas open-source do ecossistema.",
+              "relatedProjects": [
+                "plex-lang",
+                "strider-framework",
+                "core-framework-mcp-server"
+              ],
+              "repositoryLimit": 4
+            },
+            {
+              "type": "projectGrid",
+              "title": "Produtos envolvidos na instalação",
+              "body": "Uma instalação limpa prepara a camada de comandos, a toolchain da linguagem, os scaffolds do framework e o motor de docs juntos.",
+              "projects": [
+                "plex-lang",
+                "strider-framework",
+                "core-framework-mcp-server"
+              ]
+            },
+            {
+              "type": "links",
+              "title": "Páginas relacionadas à instalação",
+              "items": [
+                {
+                  "label": "Configuração",
+                  "href": "/docs/setup"
+                },
+                {
+                  "label": "Instalação da CLI",
+                  "href": "/docs/cli-installation"
+                },
+                {
+                  "label": "Primeiro projeto",
+                  "href": "/docs/first-project"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "setup",
+      "title": "Setup",
+      "category": "Getting Started",
+      "description": "Configure account, project, providers, and local environment.",
+      "body": [
+        "Setup stores project identity, runtime preferences, provider settings, and integration permissions in a single manifest-like flow.",
+        "The important constraint is that users should configure the platform once and let language, framework, CLI, and account surfaces consume the same state.",
+        "This keeps local machines, CI, and future team accounts aligned without duplicating environment setup."
+      ],
+      "widgets": [
+        {
+          "type": "code",
+          "label": "Terminal",
+          "value": "{{cli.command}} login\n{{cli.command}} project link"
+        },
+        {
+          "type": "steps",
+          "title": "Setup flow",
+          "items": [
+            {
+              "title": "Authenticate",
+              "body": "Create or reuse the local account session."
+            },
+            {
+              "title": "Link project",
+              "body": "Bind the current repository to a platform project."
+            },
+            {
+              "title": "Sync config",
+              "body": "Prepare keys, integrations, and local metadata."
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "title": "Single source of project state",
+          "body": "Setup should avoid scattering API keys, GitHub links, provider choices, and project identifiers across unrelated files.",
+          "tone": "green"
+        },
+        {
+          "type": "projectGrid",
+          "title": "Setup-aware projects",
+          "projects": [
+            "strider-framework",
+            "core-framework-mcp-server",
+            "plex-cli"
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Configuração",
+          "description": "Configure conta, projeto, providers e ambiente local.",
+          "body": [
+            "A configuração armazena identidade do projeto, preferências de runtime, ajustes de providers e permissões de integração em um fluxo semelhante a manifesto.",
+            "A regra principal é que usuários configurem a plataforma uma vez e deixem linguagem, framework, CLI e conta consumirem o mesmo estado.",
+            "Isso mantém máquinas locais, CI e futuras contas de equipe alinhadas sem duplicar configuração de ambiente."
+          ],
+          "widgets": [
+            {
+              "type": "code",
+              "label": "Terminal",
+              "value": "{{cli.command}} login\n{{cli.command}} project link"
+            },
+            {
+              "type": "steps",
+              "title": "Fluxo de configuração",
+              "items": [
+                {
+                  "title": "Autenticar",
+                  "body": "Crie ou reutilize a sessão de conta local."
+                },
+                {
+                  "title": "Vincular projeto",
+                  "body": "Vincule o repositório atual a um projeto da plataforma."
+                },
+                {
+                  "title": "Sincronizar configuração",
+                  "body": "Prepare chaves, integrações e metadados locais."
+                }
+              ]
+            },
+            {
+              "type": "callout",
+              "title": "Fonte única do estado do projeto",
+              "body": "A configuração deve evitar espalhar chaves de API, links do GitHub, escolhas de provider e identificadores de projeto em arquivos não relacionados.",
+              "tone": "green"
+            },
+            {
+              "type": "projectGrid",
+              "title": "Projetos cientes da configuração",
+              "projects": [
+                "strider-framework",
+                "core-framework-mcp-server",
+                "plex-cli"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "first-project",
+      "title": "First project",
+      "category": "Getting Started",
+      "description": "Create a project that uses the language, framework, and CLI together.",
+      "body": [
+        "A first project should demonstrate the full stack in miniature: a Plex module, a Strider API boundary, a CLI command, and an account link.",
+        "The generated scaffold should be small enough to inspect but complete enough to teach how product code will grow.",
+        "From here, users can move into language syntax, framework routing, CLI project management, or integrations."
+      ],
+      "widgets": [
+        {
+          "type": "code",
+          "label": "Terminal",
+          "value": "{{cli.command}} init api --with plex --with strider\n{{cli.command}} dev"
+        },
+        {
+          "type": "steps",
+          "title": "First project path",
+          "items": [
+            {
+              "title": "Scaffold",
+              "body": "Create an API project with Plex and Strider enabled."
+            },
+            {
+              "title": "Run checks",
+              "body": "Verify language, framework, and generated project metadata."
+            },
+            {
+              "title": "Open docs",
+              "body": "Follow the generated links into the relevant documentation pages."
+            }
+          ]
+        },
+        {
+          "type": "projectGrid",
+          "title": "Generated project layers",
+          "projects": [
+            "plex-lang",
+            "strider-framework",
+            "core-framework-mcp-server"
+          ]
+        },
+        {
+          "type": "video",
+          "title": "First project demo slot",
+          "body": "Reserved for a walkthrough showing project creation, checks, and account linking.",
+          "href": "https://example.com/synthosia-first-project",
+          "duration": "06:20"
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Primeiro projeto",
+          "description": "Crie um projeto que usa linguagem, framework e CLI juntos.",
+          "body": [
+            "Um primeiro projeto deve demonstrar a stack completa em miniatura: um módulo Plex, uma fronteira de API Strider, um comando da CLI e um vínculo de conta.",
+            "O scaffold gerado deve ser pequeno o bastante para inspeção, mas completo o suficiente para ensinar como o código de produto vai crescer.",
+            "A partir daqui, o usuário pode seguir para sintaxe da linguagem, rotas do framework, gestão de projetos pela CLI ou integrações."
+          ],
+          "widgets": [
+            {
+              "type": "code",
+              "label": "Terminal",
+              "value": "{{cli.command}} init api --with plex --with strider\n{{cli.command}} dev"
+            },
+            {
+              "type": "steps",
+              "title": "Caminho do primeiro projeto",
+              "items": [
+                {
+                  "title": "Scaffold",
+                  "body": "Crie um projeto de API com Plex e Strider habilitados."
+                },
+                {
+                  "title": "Executar checks",
+                  "body": "Verifique linguagem, framework e metadados do projeto gerado."
+                },
+                {
+                  "title": "Abrir docs",
+                  "body": "Siga os links gerados para as páginas de documentação relevantes."
+                }
+              ]
+            },
+            {
+              "type": "projectGrid",
+              "title": "Camadas do projeto gerado",
+              "projects": [
+                "plex-lang",
+                "strider-framework",
+                "core-framework-mcp-server"
+              ]
+            },
+            {
+              "type": "video",
+              "title": "Espaço para demo do primeiro projeto",
+              "body": "Reservado para um walkthrough mostrando criação de projeto, checks e vínculo de conta.",
+              "href": "https://example.com/synthosia-first-project",
+              "duration": "06:20"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "syntax",
+      "title": "Syntax",
+      "category": "Language",
+      "description": "Core Plex syntax for modules, intents, contracts, and agents.",
+      "body": [
+        "Plex syntax keeps language features explicit: imports, contracts, decorators, agent intents, and provider configuration are visible in source.",
+        "The goal is readable code that both humans and agents can inspect without guessing hidden runtime behavior.",
+        "Syntax examples should connect directly to checker feedback and CLI commands so docs stay executable."
+      ],
+      "widgets": [
+        {
+          "type": "code",
+          "label": "Plex",
+          "value": "agent SupportResponder {\n  provider: local\n  intent classify(message: string): string {\n    return ai.classify(message)\n  }\n}"
+        },
+        {
+          "type": "callout",
+          "title": "Readable by humans and agents",
+          "body": "Plex syntax should make tool use, provider choice, and safety boundaries visible at the language level.",
+          "tone": "violet"
+        },
+        {
+          "type": "projectGrid",
+          "title": "Language tooling",
+          "projects": [
+            "plex-lang",
+            "plex-cli",
+            "plex-lsp"
+          ]
+        },
+        {
+          "type": "links",
+          "title": "Continue learning Plex",
+          "items": [
+            {
+              "label": "AI features",
+              "href": "/docs/ai-features"
+            },
+            {
+              "label": "Examples",
+              "href": "/docs/examples"
+            },
+            {
+              "label": "CLI commands",
+              "href": "/docs/commands"
+            }
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Sintaxe",
+          "description": "Sintaxe central de Plex para módulos, intents, contratos e agentes.",
+          "body": [
+            "A sintaxe de Plex mantém recursos da linguagem explícitos: imports, contratos, decorators, intents de agentes e configuração de providers aparecem no código-fonte.",
+            "O objetivo é código legível que humanos e agentes consigam inspecionar sem adivinhar comportamento oculto de runtime.",
+            "Exemplos de sintaxe devem se conectar diretamente ao feedback do checker e aos comandos da CLI para que as docs continuem executáveis."
+          ],
+          "widgets": [
+            {
+              "type": "code",
+              "label": "Plex",
+              "value": "agent SupportResponder {\n  provider: local\n  intent classify(message: string): string {\n    return ai.classify(message)\n  }\n}"
+            },
+            {
+              "type": "callout",
+              "title": "Legível por humanos e agentes",
+              "body": "A sintaxe de Plex deve tornar uso de ferramentas, escolha de provider e limites de segurança visíveis no nível da linguagem.",
+              "tone": "violet"
+            },
+            {
+              "type": "projectGrid",
+              "title": "Tooling da linguagem",
+              "projects": [
+                "plex-lang",
+                "plex-cli",
+                "plex-lsp"
+              ]
+            },
+            {
+              "type": "links",
+              "title": "Continue aprendendo Plex",
+              "items": [
+                {
+                  "label": "Recursos de IA",
+                  "href": "/docs/ai-features"
+                },
+                {
+                  "label": "Exemplos",
+                  "href": "/docs/examples"
+                },
+                {
+                  "label": "Comandos da CLI",
+                  "href": "/docs/commands"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "ai-features",
+      "title": "AI features",
+      "category": "Language",
+      "description": "Provider configuration, tool loops, and static safety policies.",
+      "body": [
+        "AI behavior belongs to the toolchain, not hidden runtime glue. Providers, policies, and tool-loop permissions are declared where the checker can inspect them.",
+        "This makes generated code, local agents, and CI validation share one contract.",
+        "The language docs should describe not only what an agent can do, but which constraints make that behavior safe to run."
+      ],
+      "widgets": [
+        {
+          "type": "callout",
+          "title": "Safety model",
+          "body": "Docs can opt into callouts when a concept needs emphasis, or remove this widget entirely from JSON.",
+          "tone": "blue"
+        },
+        {
+          "type": "steps",
+          "title": "AI feature contract",
+          "items": [
+            {
+              "title": "Provider",
+              "body": "Choose local or remote model execution explicitly."
+            },
+            {
+              "title": "Policy",
+              "body": "Declare tool-loop and permission boundaries."
+            },
+            {
+              "title": "Checker",
+              "body": "Validate unsafe behavior before runtime."
+            }
+          ]
+        },
+        {
+          "type": "projectGrid",
+          "title": "AI-native project surface",
+          "projects": [
+            "plex-lang",
+            "core-framework-mcp-server",
+            "plex-cli"
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Recursos de IA",
+          "description": "Configuração de providers, tool loops e políticas de segurança estática.",
+          "body": [
+            "O comportamento de IA pertence à toolchain, não a uma cola oculta de runtime. Providers, políticas e permissões de tool-loop são declarados onde o checker consegue inspecioná-los.",
+            "Isso faz código gerado, agentes locais e validação em CI compartilharem um único contrato.",
+            "As docs da linguagem devem descrever não só o que um agente pode fazer, mas quais restrições tornam esse comportamento seguro para execução."
+          ],
+          "widgets": [
+            {
+              "type": "callout",
+              "title": "Modelo de segurança",
+              "body": "As docs podem usar destaques quando um conceito precisa de ênfase ou remover este widget totalmente do JSON.",
+              "tone": "blue"
+            },
+            {
+              "type": "steps",
+              "title": "Contrato de recursos de IA",
+              "items": [
+                {
+                  "title": "Provider",
+                  "body": "Escolha explicitamente execução local ou remota do modelo."
+                },
+                {
+                  "title": "Política",
+                  "body": "Declare limites de tool-loop e permissões."
+                },
+                {
+                  "title": "Checker",
+                  "body": "Valide comportamento inseguro antes do runtime."
+                }
+              ]
+            },
+            {
+              "type": "projectGrid",
+              "title": "Superfície de projetos nativa de IA",
+              "projects": [
+                "plex-lang",
+                "core-framework-mcp-server",
+                "plex-cli"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "examples",
+      "title": "Examples",
+      "category": "Language",
+      "description": "Practical language examples for agents, HTTP decorators, and imports.",
+      "body": [
+        "Examples should be executable and paired with checker output. The goal is to teach the shape of production code, not isolated snippets.",
+        "Each example should show the command used to run it, the expected behavior, and the project layer it belongs to.",
+        "As the ecosystem grows, this page can become the catalog for language snippets, API recipes, CLI workflows, and integration samples."
+      ],
+      "widgets": [
+        {
+          "type": "code",
+          "label": "Plex",
+          "value": "import http\n\n@get(\"/health\")\nfn health(): string {\n  return \"ok\"\n}"
+        },
+        {
+          "type": "projectGrid",
+          "title": "Example sources",
+          "projects": [
+            "plex-lang",
+            "plex-cli",
+            "plex-lsp"
+          ]
+        },
+        {
+          "type": "video",
+          "title": "Examples walkthrough slot",
+          "body": "Reserved for short recordings demonstrating runnable examples.",
+          "href": "https://example.com/synthosia-examples",
+          "duration": "05:10"
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Exemplos",
+          "description": "Exemplos práticos da linguagem para agentes, decorators HTTP e imports.",
+          "body": [
+            "Exemplos devem ser executáveis e acompanhados da saída do checker. O objetivo é ensinar o formato de código de produção, não snippets isolados.",
+            "Cada exemplo deve mostrar o comando usado para executá-lo, o comportamento esperado e a camada do projeto à qual pertence.",
+            "Conforme o ecossistema cresce, esta página pode se tornar o catálogo para snippets da linguagem, receitas de API, fluxos de CLI e amostras de integração."
+          ],
+          "widgets": [
+            {
+              "type": "code",
+              "label": "Plex",
+              "value": "import http\n\n@get(\"/health\")\nfn health(): string {\n  return \"ok\"\n}"
+            },
+            {
+              "type": "projectGrid",
+              "title": "Fontes dos exemplos",
+              "projects": [
+                "plex-lang",
+                "plex-cli",
+                "plex-lsp"
+              ]
+            },
+            {
+              "type": "video",
+              "title": "Espaço para walkthrough de exemplos",
+              "body": "Reservado para gravações curtas demonstrando exemplos executáveis.",
+              "href": "https://example.com/synthosia-examples",
+              "duration": "05:10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "routing",
+      "title": "Routing",
+      "category": "Framework",
+      "description": "Strider routing patterns inspired by Django and FastAPI.",
+      "body": [
+        "Strider routes should remain declarative: routers expose resources, viewsets define behavior, and schemas define contracts.",
+        "Routing should feel familiar to Django and FastAPI users while preserving a clear async runtime model.",
+        "Docs for routing should always pair URL design with permissions, request/response schemas, and generated OpenAPI behavior."
+      ],
+      "widgets": [
+        {
+          "type": "steps",
+          "title": "Routing layers",
+          "items": [
+            {
+              "title": "Router",
+              "body": "Groups URLs and resource boundaries."
+            },
+            {
+              "title": "Viewset",
+              "body": "Owns behavior and permissions."
+            },
+            {
+              "title": "Schema",
+              "body": "Documents request and response contracts."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "label": "Python",
+          "value": "router = AutoRouter()\nrouter.register(\"users\", UserViewSet)\napp.include_router(router.urls)"
+        },
+        {
+          "type": "projectGrid",
+          "title": "Framework routing projects",
+          "projects": [
+            "strider-framework",
+            "stride-workers-messaging",
+            "core-framework-mcp-server"
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Rotas",
+          "description": "Padrões de rotas do Strider inspirados em Django e FastAPI.",
+          "body": [
+            "Rotas no Strider devem permanecer declarativas: routers expõem recursos, viewsets definem comportamento e schemas definem contratos.",
+            "O roteamento deve parecer familiar para usuários de Django e FastAPI enquanto preserva um modelo async claro de runtime.",
+            "Docs de rotas devem sempre combinar desenho de URLs com permissões, schemas de request/response e comportamento OpenAPI gerado."
+          ],
+          "widgets": [
+            {
+              "type": "steps",
+              "title": "Camadas de rotas",
+              "items": [
+                {
+                  "title": "Router",
+                  "body": "Agrupa URLs e limites de recursos."
+                },
+                {
+                  "title": "Viewset",
+                  "body": "Controla comportamento e permissões."
+                },
+                {
+                  "title": "Schema",
+                  "body": "Documenta contratos de request e response."
+                }
+              ]
+            },
+            {
+              "type": "code",
+              "label": "Python",
+              "value": "router = AutoRouter()\nrouter.register(\"users\", UserViewSet)\napp.include_router(router.urls)"
+            },
+            {
+              "type": "projectGrid",
+              "title": "Projetos de rotas do framework",
+              "projects": [
+                "strider-framework",
+                "stride-workers-messaging",
+                "core-framework-mcp-server"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "models",
+      "title": "Models",
+      "category": "Framework",
+      "description": "Typed data models, validation, and database integration.",
+      "body": [
+        "Models are the stable contract between API behavior, admin surfaces, background jobs, and integrations.",
+        "A model should explain data shape, validation, persistence rules, and which account or project resources depend on it.",
+        "Typed models help the platform keep CLI, docs, API responses, and admin operations consistent."
+      ],
+      "widgets": [
+        {
+          "type": "steps",
+          "title": "Model lifecycle",
+          "items": [
+            {
+              "title": "Define",
+              "body": "Create a typed resource contract."
+            },
+            {
+              "title": "Validate",
+              "body": "Enforce schema and permissions."
+            },
+            {
+              "title": "Expose",
+              "body": "Use the model in API, admin, and docs surfaces."
+            }
+          ]
+        },
+        {
+          "type": "projectGrid",
+          "title": "Model consumers",
+          "projects": [
+            "strider-framework",
+            "stride-workers-messaging"
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Modelos",
+          "description": "Modelos de dados tipados, validação e integração com banco de dados.",
+          "body": [
+            "Modelos são o contrato estável entre comportamento de API, superfícies administrativas, jobs em background e integrações.",
+            "Um modelo deve explicar formato dos dados, validação, regras de persistência e quais recursos de conta ou projeto dependem dele.",
+            "Modelos tipados ajudam a plataforma a manter CLI, docs, respostas de API e operações administrativas consistentes."
+          ],
+          "widgets": [
+            {
+              "type": "steps",
+              "title": "Ciclo de vida do modelo",
+              "items": [
+                {
+                  "title": "Definir",
+                  "body": "Crie um contrato de recurso tipado."
+                },
+                {
+                  "title": "Validar",
+                  "body": "Aplique schema e permissões."
+                },
+                {
+                  "title": "Expor",
+                  "body": "Use o modelo nas superfícies de API, admin e docs."
+                }
+              ]
+            },
+            {
+              "type": "projectGrid",
+              "title": "Consumidores de modelos",
+              "projects": [
+                "strider-framework",
+                "stride-workers-messaging"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "admin-panel",
+      "title": "Admin panel",
+      "category": "Framework",
+      "description": "Operational views for resources, permissions, and platform state.",
+      "body": [
+        "The admin panel is a first-class layer for product operations, not a throwaway dashboard.",
+        "It should expose project health, account permissions, integration state, API keys, and audit-oriented actions.",
+        "Docs should explain what operators can change and which actions require confirmation or audit trails."
+      ],
+      "widgets": [
+        {
+          "type": "callout",
+          "title": "Operator-first UI",
+          "body": "Admin surfaces should prioritize state, ownership, and safe actions over marketing copy.",
+          "tone": "blue"
+        },
+        {
+          "type": "links",
+          "title": "Related platform areas",
+          "items": [
+            {
+              "label": "Account workspace",
+              "href": "/docs/account-workspace"
+            },
+            {
+              "label": "API keys",
+              "href": "/docs/api-keys"
+            },
+            {
+              "label": "Integrations",
+              "href": "/docs/external-services"
+            }
+          ]
+        },
+        {
+          "type": "projectGrid",
+          "title": "Admin platform projects",
+          "projects": [
+            "strider-framework",
+            "stride-workers-messaging",
+            "core-framework-mcp-server"
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Painel administrativo",
+          "description": "Visões operacionais para recursos, permissões e estado da plataforma.",
+          "body": [
+            "O painel administrativo é uma camada de primeira classe para operações de produto, não um dashboard descartável.",
+            "Ele deve expor saúde do projeto, permissões de conta, estado de integração, chaves de API e ações orientadas a auditoria.",
+            "As docs devem explicar o que operadores podem alterar e quais ações exigem confirmação ou trilhas de auditoria."
+          ],
+          "widgets": [
+            {
+              "type": "callout",
+              "title": "UI focada em operadores",
+              "body": "Superfícies administrativas devem priorizar estado, ownership e ações seguras acima de texto de marketing.",
+              "tone": "blue"
+            },
+            {
+              "type": "links",
+              "title": "Áreas relacionadas da plataforma",
+              "items": [
+                {
+                  "label": "Workspace da conta",
+                  "href": "/docs/account-workspace"
+                },
+                {
+                  "label": "Chaves de API",
+                  "href": "/docs/api-keys"
+                },
+                {
+                  "label": "Integrações",
+                  "href": "/docs/external-services"
+                }
+              ]
+            },
+            {
+              "type": "projectGrid",
+              "title": "Projetos da plataforma administrativa",
+              "projects": [
+                "strider-framework",
+                "stride-workers-messaging",
+                "core-framework-mcp-server"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "scaling",
+      "title": "Scaling",
+      "category": "Framework",
+      "description": "Workers, messaging, tenancy, and deployment-ready architecture.",
+      "body": [
+        "Scaling is handled through explicit modules: workers, brokers, settings, permissions, and deployment contracts.",
+        "The goal is to keep high-throughput APIs understandable as teams add background jobs, queues, and integrations.",
+        "Docs should connect scaling decisions to operational controls rather than hiding them behind magic configuration."
+      ],
+      "widgets": [
+        {
+          "type": "steps",
+          "title": "Scaling path",
+          "items": [
+            {
+              "title": "Async API",
+              "body": "Keep request handlers non-blocking."
+            },
+            {
+              "title": "Workers",
+              "body": "Move long-running work into background execution."
+            },
+            {
+              "title": "Messaging",
+              "body": "Connect Redis, RabbitMQ, Kafka, or future brokers."
+            }
+          ]
+        },
+        {
+          "type": "projectGrid",
+          "title": "Scaling modules",
+          "projects": [
+            "strider-framework",
+            "stride-workers-messaging"
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Escala",
+          "description": "Workers, mensageria, tenancy e arquitetura pronta para deploy.",
+          "body": [
+            "Escala é tratada por módulos explícitos: workers, brokers, settings, permissões e contratos de deploy.",
+            "O objetivo é manter APIs de alto throughput compreensíveis enquanto equipes adicionam jobs em background, filas e integrações.",
+            "As docs devem conectar decisões de escala a controles operacionais em vez de escondê-las atrás de configuração mágica."
+          ],
+          "widgets": [
+            {
+              "type": "steps",
+              "title": "Caminho de escala",
+              "items": [
+                {
+                  "title": "API async",
+                  "body": "Mantenha handlers de request não bloqueantes."
+                },
+                {
+                  "title": "Workers",
+                  "body": "Mova trabalho demorado para execução em background."
+                },
+                {
+                  "title": "Mensageria",
+                  "body": "Conecte Redis, RabbitMQ, Kafka ou brokers futuros."
+                }
+              ]
+            },
+            {
+              "type": "projectGrid",
+              "title": "Módulos de escala",
+              "projects": [
+                "strider-framework",
+                "stride-workers-messaging"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "cli-installation",
+      "title": "CLI installation",
+      "category": "CLI",
+      "description": "Install and verify the command line interface.",
+      "body": [
+        "The CLI is the global entry point before documentation because it binds every product layer into one workflow.",
+        "Installation should make the short command available, verify versions, and guide users toward login or first project creation.",
+        "The command name is configured centrally so docs and UI can change together."
+      ],
+      "widgets": [
+        {
+          "type": "code",
+          "label": "Terminal",
+          "value": "{{cli.installCommand}}\n{{cli.command}} --version"
+        },
+        {
+          "type": "callout",
+          "title": "Short command by design",
+          "body": "The public command is {{cli.command}} so users can type it often without friction.",
+          "tone": "violet"
+        },
+        {
+          "type": "projectGrid",
+          "title": "CLI implementation projects",
+          "projects": [
+            "plex-cli",
+            "plex-lang",
+            "plex-lsp"
+          ]
+        },
+        {
+          "type": "links",
+          "title": "Next CLI docs",
+          "items": [
+            {
+              "label": "Commands",
+              "href": "/docs/commands"
+            },
+            {
+              "label": "Project management",
+              "href": "/docs/project-management"
+            }
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Instalação da CLI",
+          "description": "Instale e verifique a interface de linha de comando.",
+          "body": [
+            "A CLI é o ponto de entrada global antes da documentação porque conecta todas as camadas do produto em um único fluxo.",
+            "A instalação deve disponibilizar o comando curto, verificar versões e guiar usuários para login ou criação do primeiro projeto.",
+            "O nome do comando é configurado de forma centralizada para que docs e UI mudem juntos."
+          ],
+          "widgets": [
+            {
+              "type": "code",
+              "label": "Terminal",
+              "value": "{{cli.installCommand}}\n{{cli.command}} --version"
+            },
+            {
+              "type": "callout",
+              "title": "Comando curto por design",
+              "body": "O comando público é {{cli.command}} para que usuários possam digitá-lo com frequência sem fricção.",
+              "tone": "violet"
+            },
+            {
+              "type": "projectGrid",
+              "title": "Projetos de implementação da CLI",
+              "projects": [
+                "plex-cli",
+                "plex-lang",
+                "plex-lsp"
+              ]
+            },
+            {
+              "type": "links",
+              "title": "Próximas docs da CLI",
+              "items": [
+                {
+                  "label": "Comandos",
+                  "href": "/docs/commands"
+                },
+                {
+                  "label": "Gestão de projetos",
+                  "href": "/docs/project-management"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "commands",
+      "title": "Commands",
+      "category": "CLI",
+      "description": "Core commands for project creation, checks, sync, and deploy preparation.",
+      "body": [
+        "Commands should be predictable and composable so agents and humans can use the same interface.",
+        "Every command should have clear output, stable flags, and documented behavior suitable for CI or agent automation.",
+        "This page is the contract between terminal UX, project state, and docs examples."
+      ],
+      "widgets": [
+        {
+          "type": "code",
+          "label": "Terminal",
+          "value": "{{cli.examples}}"
+        },
+        {
+          "type": "steps",
+          "title": "Command design rules",
+          "items": [
+            {
+              "title": "Readable",
+              "body": "Output should explain what happened."
+            },
+            {
+              "title": "Composable",
+              "body": "Commands should work in scripts and CI."
+            },
+            {
+              "title": "Agent-ready",
+              "body": "Avoid hidden prompts where structured flags work better."
+            }
+          ]
+        },
+        {
+          "type": "projectGrid",
+          "title": "Command surfaces",
+          "projects": [
+            "plex-cli",
+            "plex-lang",
+            "plex-lsp"
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Comandos",
+          "description": "Comandos centrais para criação de projetos, checks, sync e preparação de deploy.",
+          "body": [
+            "Comandos devem ser previsíveis e composáveis para que agentes e humanos usem a mesma interface.",
+            "Todo comando deve ter saída clara, flags estáveis e comportamento documentado adequado para CI ou automação por agentes.",
+            "Esta página é o contrato entre UX de terminal, estado do projeto e exemplos das docs."
+          ],
+          "widgets": [
+            {
+              "type": "code",
+              "label": "Terminal",
+              "value": "{{cli.examples}}"
+            },
+            {
+              "type": "steps",
+              "title": "Regras de design de comandos",
+              "items": [
+                {
+                  "title": "Legível",
+                  "body": "A saída deve explicar o que aconteceu."
+                },
+                {
+                  "title": "Composável",
+                  "body": "Comandos devem funcionar em scripts e CI."
+                },
+                {
+                  "title": "Pronto para agentes",
+                  "body": "Evite prompts ocultos quando flags estruturadas funcionam melhor."
+                }
+              ]
+            },
+            {
+              "type": "projectGrid",
+              "title": "Superfícies de comando",
+              "projects": [
+                "plex-cli",
+                "plex-lang",
+                "plex-lsp"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "project-management",
+      "title": "Project management",
+      "category": "CLI",
+      "description": "Link repositories, accounts, API keys, and integration state.",
+      "body": [
+        "Project management starts locally and syncs upward into the account system when a user signs in.",
+        "The CLI should understand repository identity, docs links, API keys, integrations, and project metadata as one unit.",
+        "This keeps local development aligned with the account workspace."
+      ],
+      "widgets": [
+        {
+          "type": "code",
+          "label": "Terminal",
+          "value": "{{cli.command}} project link\n{{cli.command}} project status\n{{cli.command}} sync"
+        },
+        {
+          "type": "projectGrid",
+          "title": "Managed project examples",
+          "projects": [
+            "plex-lang",
+            "strider-framework",
+            "core-framework-mcp-server"
+          ]
+        },
+        {
+          "type": "githubProfile",
+          "username": "SorPuti",
+          "role": "Maintainer",
+          "focus": "Maintains the project model that connects CLI, docs, account resources, and open-source repositories.",
+          "relatedProjects": [
+            "plex-cli",
+            "core-framework-mcp-server"
+          ],
+          "repositoryLimit": 3
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Gestão de projetos",
+          "description": "Vincule repositórios, contas, chaves de API e estado de integração.",
+          "body": [
+            "A gestão de projetos começa localmente e sincroniza para o sistema de conta quando o usuário entra.",
+            "A CLI deve entender identidade do repositório, links de docs, chaves de API, integrações e metadados do projeto como uma unidade.",
+            "Isso mantém o desenvolvimento local alinhado ao workspace da conta."
+          ],
+          "widgets": [
+            {
+              "type": "code",
+              "label": "Terminal",
+              "value": "{{cli.command}} project link\n{{cli.command}} project status\n{{cli.command}} sync"
+            },
+            {
+              "type": "projectGrid",
+              "title": "Exemplos de projetos gerenciados",
+              "projects": [
+                "plex-lang",
+                "strider-framework",
+                "core-framework-mcp-server"
+              ]
+            },
+            {
+              "type": "githubProfile",
+              "username": "SorPuti",
+              "role": "Mantenedor",
+              "focus": "Mantém o modelo de projeto que conecta CLI, docs, recursos de conta e repositórios open-source.",
+              "relatedProjects": [
+                "plex-cli",
+                "core-framework-mcp-server"
+              ],
+              "repositoryLimit": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "authentication",
+      "title": "Authentication",
+      "category": "Integrations",
+      "description": "OAuth-ready authentication flows for users and services.",
+      "body": [
+        "Auth flows should keep user identity, project linking, and service permissions visible to the account workspace.",
+        "Authentication docs should cover login, OAuth providers, session boundaries, and service-to-service access.",
+        "The platform should make it clear whether an action belongs to a user, a project, or an external integration."
+      ],
+      "widgets": [
+        {
+          "type": "steps",
+          "title": "Authentication surfaces",
+          "items": [
+            {
+              "title": "User login",
+              "body": "Identifies the developer or team member."
+            },
+            {
+              "title": "Project link",
+              "body": "Connects repositories to account resources."
+            },
+            {
+              "title": "Service access",
+              "body": "Scopes keys and OAuth grants to integrations."
+            }
+          ]
+        },
+        {
+          "type": "projectGrid",
+          "title": "Auth-connected projects",
+          "projects": [
+            "core-framework-mcp-server",
+            "stride-workers-messaging",
+            "strider-framework"
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Autenticação",
+          "description": "Fluxos de autenticação prontos para OAuth para usuários e serviços.",
+          "body": [
+            "Fluxos de autenticação devem manter identidade do usuário, vínculo de projeto e permissões de serviço visíveis no workspace da conta.",
+            "Docs de autenticação devem cobrir login, providers OAuth, limites de sessão e acesso serviço-a-serviço.",
+            "A plataforma deve deixar claro se uma ação pertence a um usuário, a um projeto ou a uma integração externa."
+          ],
+          "widgets": [
+            {
+              "type": "steps",
+              "title": "Superfícies de autenticação",
+              "items": [
+                {
+                  "title": "Login do usuário",
+                  "body": "Identifica o desenvolvedor ou membro do time."
+                },
+                {
+                  "title": "Vínculo de projeto",
+                  "body": "Conecta repositórios aos recursos da conta."
+                },
+                {
+                  "title": "Acesso de serviço",
+                  "body": "Define escopo de chaves e concessões OAuth para integrações."
+                }
+              ]
+            },
+            {
+              "type": "projectGrid",
+              "title": "Projetos conectados à autenticação",
+              "projects": [
+                "core-framework-mcp-server",
+                "stride-workers-messaging",
+                "strider-framework"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "api-keys",
+      "title": "API keys",
+      "category": "Integrations",
+      "description": "Create, rotate, scope, and audit platform keys.",
+      "body": [
+        "API keys should be scoped to projects and integrations so teams can reason about blast radius.",
+        "Docs should explain creation, rotation, naming, expiration, audit trails, and how keys connect to CLI or service integrations.",
+        "Keys belong in account resources, not scattered across unrelated project files."
+      ],
+      "widgets": [
+        {
+          "type": "callout",
+          "title": "Scope before convenience",
+          "body": "A key without a project, integration, or permission boundary becomes operational debt.",
+          "tone": "green"
+        },
+        {
+          "type": "code",
+          "label": "Terminal",
+          "value": "{{cli.command}} keys list\n{{cli.command}} keys create --project api --scope integrations:write"
+        },
+        {
+          "type": "projectGrid",
+          "title": "Key consumers",
+          "projects": [
+            "core-framework-mcp-server",
+            "stride-workers-messaging",
+            "strider-framework"
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Chaves de API",
+          "description": "Crie, rotacione, escopo e audite chaves da plataforma.",
+          "body": [
+            "Chaves de API devem ter escopo por projeto e integração para que equipes entendam o raio de impacto.",
+            "As docs devem explicar criação, rotação, nomenclatura, expiração, auditoria e como chaves se conectam à CLI ou a integrações de serviço.",
+            "Chaves pertencem aos recursos da conta, não a arquivos de projeto espalhados."
+          ],
+          "widgets": [
+            {
+              "type": "callout",
+              "title": "Escopo antes da conveniência",
+              "body": "Uma chave sem projeto, integração ou limite de permissão vira dívida operacional.",
+              "tone": "green"
+            },
+            {
+              "type": "code",
+              "label": "Terminal",
+              "value": "{{cli.command}} keys list\n{{cli.command}} keys create --project api --scope integrations:write"
+            },
+            {
+              "type": "projectGrid",
+              "title": "Consumidores de chaves",
+              "projects": [
+                "core-framework-mcp-server",
+                "stride-workers-messaging",
+                "strider-framework"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "external-services",
+      "title": "External services",
+      "category": "Integrations",
+      "description": "Connect GitHub, providers, webhooks, and deployment targets.",
+      "body": [
+        "External service connectors belong in one hub with status, docs, setup steps, and test actions.",
+        "Each connector should explain required keys, event flow, webhook behavior, retry expectations, and failure states.",
+        "GitHub, OAuth, AI providers, webhooks, queues, and deploy targets should share one integration model."
+      ],
+      "widgets": [
+        {
+          "type": "video",
+          "title": "Integration hub demo slot",
+          "body": "Reserved for a recording that connects GitHub, API keys, and webhooks.",
+          "href": "https://example.com/synthosia-integrations",
+          "duration": "07:40"
+        },
+        {
+          "type": "links",
+          "title": "Integration docs",
+          "items": [
+            {
+              "label": "Authentication",
+              "href": "/docs/authentication"
+            },
+            {
+              "label": "API keys",
+              "href": "/docs/api-keys"
+            },
+            {
+              "label": "Account workspace",
+              "href": "/docs/account-workspace"
+            }
+          ]
+        },
+        {
+          "type": "projectGrid",
+          "title": "Integration projects",
+          "projects": [
+            "core-framework-mcp-server",
+            "stride-workers-messaging",
+            "strider-framework"
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Serviços externos",
+          "description": "Conecte GitHub, providers, webhooks e destinos de deploy.",
+          "body": [
+            "Conectores de serviços externos pertencem a um hub com status, docs, passos de setup e ações de teste.",
+            "Cada conector deve explicar chaves exigidas, fluxo de eventos, comportamento de webhooks, expectativas de retry e estados de falha.",
+            "GitHub, OAuth, providers de IA, webhooks, filas e destinos de deploy devem compartilhar um único modelo de integração."
+          ],
+          "widgets": [
+            {
+              "type": "video",
+              "title": "Espaço para demo do hub de integrações",
+              "body": "Reservado para uma gravação conectando GitHub, chaves de API e webhooks.",
+              "href": "https://example.com/synthosia-integrations",
+              "duration": "07:40"
+            },
+            {
+              "type": "links",
+              "title": "Docs de integrações",
+              "items": [
+                {
+                  "label": "Autenticação",
+                  "href": "/docs/authentication"
+                },
+                {
+                  "label": "Chaves de API",
+                  "href": "/docs/api-keys"
+                },
+                {
+                  "label": "Workspace da conta",
+                  "href": "/docs/account-workspace"
+                }
+              ]
+            },
+            {
+              "type": "projectGrid",
+              "title": "Projetos de integração",
+              "projects": [
+                "core-framework-mcp-server",
+                "stride-workers-messaging",
+                "strider-framework"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "login",
+      "title": "Login",
+      "category": "Account & Platform",
+      "description": "Account entry point for users, teams, and OAuth providers.",
+      "body": [
+        "Login creates a local account session in the current app and keeps the route ready for a backend session API.",
+        "The login flow should be explicit about what is stored locally and what will later be delegated to OAuth or a backend session.",
+        "After login, account resources can show projects, API keys, integrations, and CLI connections."
+      ],
+      "widgets": [
+        {
+          "type": "links",
+          "title": "Account entry points",
+          "items": [
+            {
+              "label": "Open auth",
+              "href": "/auth"
+            },
+            {
+              "label": "Open account",
+              "href": "/account"
+            },
+            {
+              "label": "Connecting projects",
+              "href": "/docs/connecting-projects"
+            }
+          ]
+        },
+        {
+          "type": "projectGrid",
+          "title": "Login-related implementation",
+          "projects": [
+            "strider-framework",
+            "core-framework-mcp-server",
+            "plex-cli"
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Login",
+          "description": "Ponto de entrada da conta para usuários, equipes e providers OAuth.",
+          "body": [
+            "O login cria uma sessão de conta local no app atual e mantém a rota pronta para uma API de sessão no backend.",
+            "O fluxo de login deve ser explícito sobre o que é armazenado localmente e o que depois será delegado a OAuth ou a uma sessão backend.",
+            "Depois do login, recursos da conta podem mostrar projetos, chaves de API, integrações e conexões da CLI."
+          ],
+          "widgets": [
+            {
+              "type": "links",
+              "title": "Pontos de entrada da conta",
+              "items": [
+                {
+                  "label": "Abrir autenticação",
+                  "href": "/auth"
+                },
+                {
+                  "label": "Abrir conta",
+                  "href": "/account"
+                },
+                {
+                  "label": "Conectando projetos",
+                  "href": "/docs/connecting-projects"
+                }
+              ]
+            },
+            {
+              "type": "projectGrid",
+              "title": "Implementação relacionada ao login",
+              "projects": [
+                "strider-framework",
+                "core-framework-mcp-server",
+                "plex-cli"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "connecting-projects",
+      "title": "Connecting projects",
+      "category": "Account & Platform",
+      "description": "Bind local repositories to account-managed projects.",
+      "body": [
+        "Project linking lets the CLI, docs, GitHub integration, and account UI refer to the same project identity.",
+        "A connected project should know its repository, docs route, integration state, API keys, and local command context.",
+        "This makes it possible to move between docs, GitHub, CLI, and account resources without manually re-entering metadata."
+      ],
+      "widgets": [
+        {
+          "type": "steps",
+          "title": "Project connection flow",
+          "items": [
+            {
+              "title": "Identify repo",
+              "body": "Read local Git remote and project metadata."
+            },
+            {
+              "title": "Attach account",
+              "body": "Bind project to the signed-in user or team."
+            },
+            {
+              "title": "Expose resources",
+              "body": "Show keys, integrations, docs, and CLI state in one place."
+            }
+          ]
+        },
+        {
+          "type": "projectGrid",
+          "title": "Connected project examples",
+          "projects": [
+            "plex-lang",
+            "strider-framework",
+            "core-framework-mcp-server"
+          ]
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Conectando projetos",
+          "description": "Vincule repositórios locais a projetos gerenciados pela conta.",
+          "body": [
+            "O vínculo de projeto permite que CLI, docs, integração GitHub e UI de conta usem a mesma identidade de projeto.",
+            "Um projeto conectado deve conhecer seu repositório, rota de docs, estado de integração, chaves de API e contexto local de comando.",
+            "Isso torna possível navegar entre docs, GitHub, CLI e recursos da conta sem redigitar metadados manualmente."
+          ],
+          "widgets": [
+            {
+              "type": "steps",
+              "title": "Fluxo de conexão do projeto",
+              "items": [
+                {
+                  "title": "Identificar repositório",
+                  "body": "Leia o remote Git local e os metadados do projeto."
+                },
+                {
+                  "title": "Anexar conta",
+                  "body": "Vincule o projeto ao usuário ou time autenticado."
+                },
+                {
+                  "title": "Expor recursos",
+                  "body": "Mostre chaves, integrações, docs e estado da CLI em um único lugar."
+                }
+              ]
+            },
+            {
+              "type": "projectGrid",
+              "title": "Exemplos de projetos conectados",
+              "projects": [
+                "plex-lang",
+                "strider-framework",
+                "core-framework-mcp-server"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "slug": "account-workspace",
+      "title": "Account workspace",
+      "category": "Account & Platform",
+      "description": "Manage projects, API keys, integrations, and CLI connections.",
+      "body": [
+        "The account workspace replaces a generic dashboard and only shows resources that the user creates or connects.",
+        "It should manage projects, API keys, integrations, and CLI connections while making empty states honest and actionable.",
+        "As the platform grows, this workspace becomes the SaaS control plane for Synthosia."
+      ],
+      "widgets": [
+        {
+          "type": "links",
+          "title": "Related account surfaces",
+          "items": [
+            {
+              "label": "Open account",
+              "href": "/account"
+            },
+            {
+              "label": "Login or register",
+              "href": "/auth"
+            }
+          ]
+        },
+        {
+          "type": "steps",
+          "title": "Workspace resource model",
+          "items": [
+            {
+              "title": "Projects",
+              "body": "Linked repositories and platform applications."
+            },
+            {
+              "title": "Keys",
+              "body": "Scoped credentials for integrations and APIs."
+            },
+            {
+              "title": "Connections",
+              "body": "CLI sessions, GitHub links, and external services."
+            }
+          ]
+        },
+        {
+          "type": "projectGrid",
+          "title": "Workspace-backed projects",
+          "projects": [
+            "strider-framework",
+            "core-framework-mcp-server",
+            "plex-cli"
+          ]
+        },
+        {
+          "type": "githubProfile",
+          "username": "SorPuti",
+          "role": "Platform owner",
+          "focus": "Owns the account workspace direction and how it connects projects, keys, integrations, CLI state, and docs.",
+          "relatedProjects": [
+            "strider-framework",
+            "core-framework-mcp-server"
+          ],
+          "repositoryLimit": 3
+        }
+      ],
+      "translations": {
+        "pt-BR": {
+          "title": "Workspace da conta",
+          "description": "Gerencie projetos, chaves de API, integrações e conexões da CLI.",
+          "body": [
+            "O workspace da conta substitui um dashboard genérico e mostra apenas recursos que o usuário cria ou conecta.",
+            "Ele deve gerenciar projetos, chaves de API, integrações e conexões da CLI enquanto mantém empty states honestos e acionáveis.",
+            "Conforme a plataforma cresce, esse workspace se torna o control plane SaaS da Synthosia."
+          ],
+          "widgets": [
+            {
+              "type": "links",
+              "title": "Superfícies relacionadas à conta",
+              "items": [
+                {
+                  "label": "Abrir conta",
+                  "href": "/account"
+                },
+                {
+                  "label": "Entrar ou registrar",
+                  "href": "/auth"
+                }
+              ]
+            },
+            {
+              "type": "steps",
+              "title": "Modelo de recursos do workspace",
+              "items": [
+                {
+                  "title": "Projetos",
+                  "body": "Repositórios vinculados e aplicações da plataforma."
+                },
+                {
+                  "title": "Chaves",
+                  "body": "Credenciais com escopo para integrações e APIs."
+                },
+                {
+                  "title": "Conexões",
+                  "body": "Sessões da CLI, links do GitHub e serviços externos."
+                }
+              ]
+            },
+            {
+              "type": "projectGrid",
+              "title": "Projetos apoiados pelo workspace",
+              "projects": [
+                "strider-framework",
+                "core-framework-mcp-server",
+                "plex-cli"
+              ]
+            },
+            {
+              "type": "githubProfile",
+              "username": "SorPuti",
+              "role": "Responsável pela plataforma",
+              "focus": "Define a direção do workspace da conta e como ele conecta projetos, chaves, integrações, estado da CLI e docs.",
+              "relatedProjects": [
+                "strider-framework",
+                "core-framework-mcp-server"
+              ],
+              "repositoryLimit": 3
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -35,7 +35,7 @@ export function OpenSourceHub() {
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-lg border border-[rgba(38,37,30,0.1)] bg-[#e6e5e0] p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-lg border border-white/10 bg-[#0d0c13] p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-2">
           {filters.map((filter) => (
             <button
@@ -43,22 +43,22 @@ export function OpenSourceHub() {
               type="button"
               onClick={() => setActiveFilter(filter.value)}
               className={cn(
-                "rounded-full px-3 py-1.5 font-display text-sm transition-colors duration-150 ease-out",
+                "rounded-full px-3 py-1.5 font-display text-sm transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300",
                 activeFilter === filter.value
-                  ? "bg-[#e1e0db] text-[#26251e]"
-                  : "bg-[#f2f1ed] text-[rgba(38,37,30,0.62)] hover:text-[#cf2d56]",
+                  ? "bg-[#211b33] text-white"
+                  : "bg-[#12111a] text-white/62 hover:text-violet-100",
               )}
             >
               {filter.label}
             </button>
           ))}
         </div>
-        <label className="flex items-center gap-2 rounded-lg border border-[rgba(38,37,30,0.1)] bg-[#f2f1ed] px-3 py-2">
-          <span className="font-display text-xs text-[rgba(38,37,30,0.62)]">Search</span>
+        <label className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#050509] px-3 py-2">
+          <span className="font-display text-xs text-white/62">Search</span>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            className="w-full bg-transparent font-display text-sm text-[#26251e] outline-none placeholder:text-[rgba(38,37,30,0.45)]"
+            className="w-full bg-transparent font-display text-sm text-white outline-none placeholder:text-white/35"
             placeholder="project, tag, or capability"
           />
         </label>
@@ -70,9 +70,9 @@ export function OpenSourceHub() {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-[rgba(38,37,30,0.1)] bg-[#f7f7f4] p-8 text-center">
-          <p className="font-display text-base text-[#26251e]">No projects found</p>
-          <p className="mt-2 font-serif text-[1rem] text-[rgba(38,37,30,0.7)]">
+        <div className="rounded-lg border border-white/10 bg-[#0d0c13] p-8 text-center">
+          <p className="font-display text-base text-[#f7f4ff]">No projects found</p>
+          <p className="mt-2 font-serif text-[1rem] text-white/68">
             Try a different keyword or switch the filter.
           </p>
         </div>
