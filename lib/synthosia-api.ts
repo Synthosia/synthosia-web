@@ -6,6 +6,20 @@ type ApiKeyCreateResponse = {
   account: AccountSession;
 };
 
+/** Escopos aceitos pelo backend (`POST /v1/api-keys`) — manter alinhado com `ALLOWED_API_KEY_SCOPES` na API. */
+export const API_KEY_SCOPE_OPTIONS = [
+  { id: "account:read", label: "Conta — leitura" },
+  { id: "projects:read", label: "Projetos — leitura" },
+  { id: "projects:write", label: "Projetos — escrita" },
+  { id: "integrations:read", label: "Integrações — leitura" },
+  { id: "integrations:write", label: "Integrações — escrita" },
+  { id: "infra:read", label: "Infra — leitura" },
+  { id: "infra:write", label: "Infra — escrita" },
+  { id: "edge:read", label: "Edge — leitura" },
+  { id: "edge:write", label: "Edge — escrita" },
+  { id: "git:write", label: "Git — enfileirar operações" },
+] as const;
+
 const API_URL = process.env.NEXT_PUBLIC_SYNTHOSIA_API_URL ?? "http://localhost:8080";
 
 export function githubOAuthUrl(): string {
@@ -45,6 +59,30 @@ export async function getAccountSession(): Promise<AccountSession | null> {
   }
 }
 
+export type ConsoleAlert = {
+  id: string;
+  title: string;
+  message: string;
+  severity: string;
+};
+
+export type ConsoleDashboard = {
+  alerts: ConsoleAlert[];
+  metrics: {
+    cpuPercentSeries: number[];
+    memoryPercentSeries: number[];
+    networkMbpsSeries: number[];
+    activeWorkers: number;
+  };
+  notificationCount: number;
+  windowLabel: string;
+  generatedAt: number;
+};
+
+export async function getConsoleDashboard(): Promise<ConsoleDashboard> {
+  return apiFetch<ConsoleDashboard>("/v1/console/dashboard", { method: "GET" }, { retryAuth: true });
+}
+
 export async function registerAccount(payload: {
   name: string;
   email: string;
@@ -52,8 +90,7 @@ export async function registerAccount(payload: {
 }): Promise<AccountSession> {
   const session = await apiFetch<AccountSession>("/v1/auth/register", {
     method: "POST",
-    body: JSON.stringify(payload),
-  });
+    body: JSON.stringify
   notifyAccountSessionChanged();
   return session;
 }
@@ -89,12 +126,22 @@ export async function linkProject(name: string): Promise<AccountSession> {
   return session;
 }
 
-export async function createApiKey(): Promise<ApiKeyCreateResponse> {
+export async function createApiKey(payload?: {
+  name?: string;
+  scopes?: string[];
+}): Promise<ApiKeyCreateResponse> {
+  const body = JSON.stringify({
+    name: payload?.name,
+    scopes: payload?.scopes?.length
+      ? payload.scopes
+      : ["account:read", "projects:read"],
+  });
   const response = await apiFetch<ApiKeyCreateResponse>(
     "/v1/api-keys",
     {
       method: "POST",
-      headers: csrfHeaders(),
+      headers: { ...csrfHeaders(), "Content-Type": "application/json" },
+      body,
     },
     { retryAuth: true },
   );
@@ -128,6 +175,105 @@ export async function connectCli(): Promise<AccountSession> {
   );
   notifyAccountSessionChanged();
   return session;
+}
+
+export type WorkspaceMember = {
+  email: string;
+  name: string;
+  role: string;
+};
+
+export async function listWorkspaceMembers(): Promise<WorkspaceMember[]> {
+  return apiFetch<WorkspaceMember[]>("/v1/workspace/members", { method: "GET" }, { retryAuth: true });
+}
+
+export type ServerInstance = {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  environment: string;
+};
+
+export async function listServerInstances(): Promise<ServerInstance[]> {
+  return apiFetch<ServerInstance[]>("/v1/infrastructure/server-instances", { method: "GET" }, { retryAuth: true });
+}
+
+export async function createServerInstance(payload: {
+  name: string;
+  host: string;
+  port?: number;
+  environment?: string;
+}): Promise<ServerInstance> {
+  return apiFetch<ServerInstance>(
+    "/v1/infrastructure/server-instances",
+    {
+      method: "POST",
+      headers: csrfHeaders(),
+      body: JSON.stringify(payload),
+    },
+    { retryAuth: true },
+  );
+}
+
+export type CloudflareRedirect = {
+  id: string;
+  sourceHost: string;
+  targetUrl: string;
+  status: string;
+  verificationToken: string;
+  externalId?: string;
+};
+
+export async function listCloudflareRedirects(): Promise<CloudflareRedirect[]> {
+  return apiFetch<CloudflareRedirect[]>("/v1/infrastructure/cloudflare/redirects", { method: "GET" }, { retryAuth: true });
+}
+
+export async function createCloudflareRedirect(payload: {
+  sourceHost: string;
+  targetUrl: string;
+}): Promise<CloudflareRedirect> {
+  return apiFetch<CloudflareRedirect>(
+    "/v1/infrastructure/cloudflare/redirects",
+    {
+      method: "POST",
+      headers: csrfHeaders(),
+      body: JSON.stringify({ sourceHost: payload.sourceHost, targetUrl: payload.targetUrl }),
+    },
+    { retryAuth: true },
+  );
+}
+
+export type GithubRepository = {
+  fullName: string;
+  private: boolean;
+  defaultBranch?: string;
+  htmlUrl: string;
+};
+
+export async function listGithubRepositories(): Promise<GithubRepository[]> {
+  return apiFetch<GithubRepository[]>("/v1/infrastructure/github/repositories", { method: "GET" }, { retryAuth: true });
+}
+
+export type GitOperationAccepted = {
+  id: string;
+  status: string;
+  message: string;
+};
+
+export async function enqueueGitOperation(payload: {
+  repositoryUrl: string;
+  operation: "clone" | "push" | "sync";
+}): Promise<GitOperationAccepted> {
+  return apiFetch<GitOperationAccepted>(
+    "/v1/infrastructure/git/operations",
+    {
+      method: "POST",
+      headers: csrfHeaders(),
+      body: JSON.stringify({ repositoryUrl: payload.repositoryUrl, operation: payload.operation }),
+    },
+    { retryAuth: true },
+  );
 }
 
 async function refreshSession(): Promise<boolean> {

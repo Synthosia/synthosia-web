@@ -80,3 +80,30 @@ export function IntegrationIcon({ className = "size-4" }: IconProps) {
     </svg>
   );
 }
+
+export function BellIcon({ className = "size-4" }: IconProps) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none">
+      <path
+        d="M14 18a2 2 0 1 1-4 0M6 9a6 6 0 1 1 12 0c0 3.18.75 4.22 1.5 5.5a1 1 0 0 1-.8 1.5H5.3a1 1 0 0 1-.8-1.5C5.25 13.22 6 12.18 6 9Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function RefreshCwIcon({ className = "size-4" }: IconProps) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none">
+      <path
+        d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16M21 21v-5h-5"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

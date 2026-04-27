@@ -29,6 +29,12 @@
   --button-secondary-bg: #ece8f8;
   --button-secondary-text: #261a3d;
   --focus-ring: #7c3aed;
+  /* Console / control-plane (referência visual tipo cloud enterprise + tokens Synthosia) */
+  --console-chrome-bg: #f4f3fa;
+  --console-rail-bg: #eceaf4;
+  --console-rail-border: rgba(25, 22, 37, 0.1);
+  --console-search-bg: #ffffff;
+  --console-table-header: #e8e5f2;
 }
 
 .theme-dark {
@@ -56,6 +62,11 @@
   --button-secondary-bg: #171124;
   --button-secondary-text: #ede9fe;
   --focus-ring: #c4b5fd;
+  --console-chrome-bg: #08080d;
+  --console-rail-bg: #0b0a10;
+  --console-rail-border: rgba(247, 244, 255, 0.08);
+  --console-search-bg: #12111a;
+  --console-table-header: #0d0c13;
 }
 
 @theme inline {
@@ -148,6 +159,51 @@ body {
   border: 1px solid var(--border-subtle);
   background: var(--surface-interactive);
   color: var(--button-secondary-text);
+}
+
+.console-topbar {
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--console-chrome-bg);
+  backdrop-filter: blur(10px);
+}
+
+.console-search-input {
+  border: 1px solid var(--border-subtle);
+  background: var(--console-search-bg);
+  color: var(--text-primary);
+  border-radius: 4px;
+}
+
+.console-workspace-pill {
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-interactive);
+  border-radius: 9999px;
+}
+
+.console-rail {
+  border-right: 1px solid var(--console-rail-border);
+  background: var(--console-rail-bg);
+}
+
+.console-rail-link-active {
+  border-left: 3px solid var(--brand-accent-2);
+  background: color-mix(in oklab, var(--brand-accent) 14%, transparent);
+  padding-left: calc(0.75rem - 3px);
+}
+
+.console-subheader {
+  border-bottom: 1px solid var(--border-subtle);
+  background: color-mix(in oklab, var(--surface-page) 88%, var(--surface-panel));
+}
+
+.console-data-table-wrap {
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.console-data-table tbody tr:hover {
+  background: color-mix(in oklab, var(--surface-interactive) 35%, transparent);
 }
 
 .text-primary {
