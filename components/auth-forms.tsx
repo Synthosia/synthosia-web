@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { GitHubIcon, GoogleIcon, KeyIcon, ShieldIcon, TerminalIcon } from "@/components/auth-icons";
-import { emptyAccountSession, readAccountSession, writeAccountSession } from "@/lib/account-session";
+import { loginAccount, registerAccount, startGithubOAuth } from "@/lib/synthosia-api";
 
 type AuthMode = "login" | "register";
 
@@ -31,47 +31,65 @@ const providerConfig = {
 export function AuthForms({ mode }: AuthFormsProps) {
   const router = useRouter();
   const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
   const [registerName, setRegisterName] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function login() {
-    const session = readAccountSession();
-
-    if (!session || session.email.toLowerCase() !== loginEmail.trim().toLowerCase()) {
-      setMessage("No local account found for this email. Create the account first.");
+  async function login() {
+    if (!loginEmail.trim() || loginPassword.length < 8) {
+      setMessage("Enter your email and password.");
       return;
     }
 
-    setMessage("Login completed.");
-    router.push("/account");
+    setIsSubmitting(true);
+    try {
+      await loginAccount({ email: loginEmail.trim(), password: loginPassword });
+      setMessage("Login completed.");
+      router.push("/account");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to login.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
-  function register() {
+  async function register() {
     const name = registerName.trim();
     const email = registerEmail.trim();
 
-    if (!name || !email) {
-      setMessage("Enter name and email to create the account.");
+    if (!name || !email || registerPassword.length < 8) {
+      setMessage("Enter name, email, and a password with at least 8 characters.");
       return;
     }
 
-    writeAccountSession(emptyAccountSession(name, email));
-    setMessage("Account created in this browser.");
-    router.push("/account");
+    setIsSubmitting(true);
+    try {
+      await registerAccount({ name, email, password: registerPassword });
+      setMessage("Account created.");
+      router.push("/account");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to create account.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
-  function continueWithProvider(provider: keyof typeof providerConfig) {
+  async function continueWithProvider(provider: keyof typeof providerConfig) {
     const selectedProvider = providerConfig[provider];
-    const existingSession = readAccountSession();
 
-    writeAccountSession(
-      existingSession?.authProvider === provider
-        ? existingSession
-        : emptyAccountSession(selectedProvider.name, selectedProvider.email, provider),
-    );
-    setMessage(`${selectedProvider.name} connected.`);
-    router.push("/account");
+    if (provider === "github") {
+      try {
+        await startGithubOAuth();
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Unable to start GitHub OAuth.");
+      }
+      return;
+    }
+
+    setMessage(`${selectedProvider.name} OAuth is ready in the API contract and will be connected after provider credentials are configured.`);
   }
 
   return (
@@ -163,15 +181,18 @@ export function AuthForms({ mode }: AuthFormsProps) {
             <span className="font-display text-sm text-secondary">Password</span>
             <input
               type="password"
+              value={loginPassword}
+              onChange={(event) => setLoginPassword(event.target.value)}
               className="focus-themed w-full rounded-lg border border-white/10 bg-[#050509] px-3 py-2 font-display text-sm text-primary outline-none placeholder:text-muted"
               placeholder="••••••••"
             />
           </label>
           <button
             type="submit"
+            disabled={isSubmitting}
             className="btn-primary focus-themed w-full cursor-pointer rounded-lg px-4 py-2.5 font-display text-sm transition-opacity duration-150 ease-out hover:opacity-90"
           >
-            Login
+            {isSubmitting ? "Signing in..." : "Login"}
           </button>
           <p className="font-serif text-sm text-secondary">
             Need an account?{" "}
@@ -210,11 +231,22 @@ export function AuthForms({ mode }: AuthFormsProps) {
               placeholder="team@synthosia.dev"
             />
           </label>
+          <label className="block space-y-2">
+            <span className="font-display text-sm text-secondary">Password</span>
+            <input
+              type="password"
+              value={registerPassword}
+              onChange={(event) => setRegisterPassword(event.target.value)}
+              className="focus-themed w-full rounded-lg border border-white/10 bg-[#050509] px-3 py-2 font-display text-sm text-primary outline-none placeholder:text-muted"
+              placeholder="At least 8 characters"
+            />
+          </label>
           <button
             type="submit"
+            disabled={isSubmitting}
             className="btn-primary focus-themed w-full cursor-pointer rounded-lg px-4 py-2.5 font-display text-sm transition-opacity duration-150 ease-out hover:opacity-90"
           >
-            Create account
+            {isSubmitting ? "Creating..." : "Create account"}
           </button>
           <p className="font-serif text-sm text-secondary">
             Already have an account?{" "}

@@ -3,28 +3,34 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/components/language-provider";
-import { readAccountSession } from "@/lib/account-session";
+import { getAccountSession } from "@/lib/synthosia-api";
 
 export function AccountLink() {
   const { dictionary } = useLanguage();
   const [href, setHref] = useState("/auth/login");
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      setHref(readAccountSession() ? "/account" : "/auth/login");
-    });
+    let isMounted = true;
 
-    function syncAccountLink() {
-      setHref(readAccountSession() ? "/account" : "/auth/login");
+    async function syncAccountLink() {
+      try {
+        const session = await getAccountSession();
+        if (isMounted) {
+          setHref(session ? "/account" : "/auth/login");
+        }
+      } catch {
+        if (isMounted) {
+          setHref("/auth/login");
+        }
+      }
     }
 
+    syncAccountLink();
     window.addEventListener("synthosia-account-change", syncAccountLink);
-    window.addEventListener("storage", syncAccountLink);
 
     return () => {
-      window.cancelAnimationFrame(frame);
+      isMounted = false;
       window.removeEventListener("synthosia-account-change", syncAccountLink);
-      window.removeEventListener("storage", syncAccountLink);
     };
   }, []);
 

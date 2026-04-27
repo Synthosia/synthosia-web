@@ -7,13 +7,16 @@ import { ApiIcon, CloudIcon, IntegrationIcon, KeyIcon, ProjectIcon, TerminalIcon
 import { BrandLogo } from "@/components/brand-logo";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
-import {
-  type AccountSession,
-  clearAccountSession,
-  readAccountSession,
-  writeAccountSession,
-} from "@/lib/account-session";
+import { type AccountSession } from "@/lib/account-session";
 import { platformConfig } from "@/lib/platform-config";
+import {
+  connectCli as connectCliSession,
+  connectIntegration as connectIntegrationSession,
+  createApiKey as createApiKeySession,
+  getAccountSession,
+  linkProject as linkProjectSession,
+  logoutAccount,
+} from "@/lib/synthosia-api";
 
 const integrationOptions = ["GitHub", "OAuth provider", "AI provider", "Webhook endpoint"];
 const sidebarItems = [
@@ -28,17 +31,26 @@ export function AccountWorkspace() {
   const [session, setSession] = useState<AccountSession | null>(null);
   const [projectName, setProjectName] = useState("");
   const [integrationName, setIntegrationName] = useState(integrationOptions[0]);
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMutating, setIsMutating] = useState(false);
 
   useEffect(() => {
-    const syncSession = () => setSession(readAccountSession());
+    const syncSession = async () => {
+      try {
+        setSession(await getAccountSession());
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Unable to load account.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
     syncSession();
     window.addEventListener("synthosia-account-change", syncSession);
-    window.addEventListener("storage", syncSession);
 
     return () => {
       window.removeEventListener("synthosia-account-change", syncSession);
-      window.removeEventListener("storage", syncSession);
     };
   }, []);
 
@@ -55,14 +67,17 @@ export function AccountWorkspace() {
     ];
   }, [session]);
 
-  function updateSession(updater: (current: AccountSession) => AccountSession) {
-    if (!session) {
-      return;
+  async function runMutation(action: () => Promise<AccountSession>, successMessage: string) {
+    setIsMutating(true);
+    try {
+      const nextSession = await action();
+      setSession(nextSession);
+      setMessage(successMessage);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Cloud action failed.");
+    } finally {
+      setIsMutating(false);
     }
-
-    const nextSession = updater(session);
-    writeAccountSession(nextSession);
-    setSession(nextSession);
   }
 
   function linkProject() {
@@ -72,35 +87,43 @@ export function AccountWorkspace() {
       return;
     }
 
-    updateSession((current) => ({
-      ...current,
-      projects: current.projects.includes(name) ? current.projects : [...current.projects, name],
-    }));
+    runMutation(() => linkProjectSession(name), "Project linked.");
     setProjectName("");
   }
 
   function createApiKey() {
-    const key = `sk_syn_${Math.random().toString(36).slice(2, 10)}`;
-    updateSession((current) => ({ ...current, apiKeys: [...current.apiKeys, key] }));
+    setIsMutating(true);
+    createApiKeySession()
+      .then((response) => {
+        setSession(response.account);
+        setMessage(`API key created. Copy now: ${response.secret}`);
+      })
+      .catch((error) => setMessage(error instanceof Error ? error.message : "Unable to create API key."))
+      .finally(() => setIsMutating(false));
   }
 
   function connectIntegration() {
-    updateSession((current) => ({
-      ...current,
-      integrations: current.integrations.includes(integrationName)
-        ? current.integrations
-        : [...current.integrations, integrationName],
-    }));
+    runMutation(() => connectIntegrationSession(integrationName), "Integration connected.");
   }
 
   function connectCli() {
-    const connection = `${platformConfig.cli.command}@local`;
-    updateSession((current) => ({
-      ...current,
-      cliConnections: current.cliConnections.includes(connection)
-        ? current.cliConnections
-        : [...current.cliConnections, connection],
-    }));
+    runMutation(() => connectCliSession(), "CLI context connected.");
+  }
+
+  if (isLoading) {
+    return (
+      <div className="grid min-h-dvh bg-[var(--surface-page)] lg:grid-cols-[280px_1fr]">
+        <CloudSidebar />
+        <main className="flex min-w-0 flex-col">
+          <CloudTopBar />
+          <section className="grid flex-1 place-items-center p-5 sm:p-8">
+            <div className="surface-panel w-full max-w-2xl rounded-[28px] p-6 text-center font-serif text-secondary sm:p-10">
+              Loading Synthosia Cloud session...
+            </div>
+          </section>
+        </main>
+      </div>
+    );
   }
 
   if (!session) {
@@ -120,6 +143,7 @@ export function AccountWorkspace() {
                   <p className="mt-5 max-w-2xl text-pretty font-serif text-[1.08rem] leading-[1.55] text-secondary">
                     The account console manages projects, API keys, integrations, and CLI contexts under one developer identity.
                   </p>
+                  {message ? <p className="mt-4 font-serif text-sm text-secondary">{message}</p> : null}
                   <div className="mt-6 flex flex-wrap gap-3">
                     <Link href="/auth/login" className="btn-primary focus-themed rounded-lg px-4 py-2.5 font-display text-sm">
                       Sign in
@@ -154,8 +178,7 @@ export function AccountWorkspace() {
         <CloudTopBar
           session={session}
           onSignOut={() => {
-            clearAccountSession();
-            setSession(null);
+            logoutAccount().finally(() => setSession(null));
           }}
         />
 
@@ -176,9 +199,10 @@ export function AccountWorkspace() {
                   <p className="mt-2 font-serif text-[1rem] text-secondary">{session.email}</p>
                 </div>
                 <span className="surface-raised rounded-full px-3 py-1 font-mono text-xs text-secondary">
-                  provider: {session.authProvider ?? "email"}
+                  provider: {session.authProvider ?? "email"} · role: {session.role ?? "viewer"}
                 </span>
               </div>
+              {message ? <p className="mt-4 font-serif text-sm text-secondary">{message}</p> : null}
             </motion.article>
 
             <article className="surface-panel rounded-[24px] p-6">
@@ -221,16 +245,16 @@ export function AccountWorkspace() {
                     className="focus-themed min-w-0 flex-1 rounded-lg border border-white/10 bg-[#050509] px-3 py-2 font-display text-sm text-primary outline-none placeholder:text-muted"
                     placeholder="project-slug"
                   />
-                  <button type="button" onClick={linkProject} className="btn-primary focus-themed cursor-pointer rounded-lg px-3 py-2 font-display text-sm">
-                    Link
+                  <button type="button" disabled={isMutating} onClick={linkProject} className="btn-primary focus-themed cursor-pointer rounded-lg px-3 py-2 font-display text-sm">
+                    {isMutating ? "Syncing" : "Link"}
                   </button>
                 </div>
                 <ResourceList items={session.projects} emptyLabel="No project connected." />
               </CloudPanel>
 
               <CloudPanel icon={KeyIcon} title="API keys" eyebrow="Access control">
-                <button type="button" onClick={createApiKey} className="btn-primary focus-themed mt-4 cursor-pointer rounded-lg px-3 py-2 font-display text-sm">
-                  Create key
+                <button type="button" disabled={isMutating} onClick={createApiKey} className="btn-primary focus-themed mt-4 cursor-pointer rounded-lg px-3 py-2 font-display text-sm">
+                  {isMutating ? "Creating" : "Create key"}
                 </button>
                 <ResourceList items={session.apiKeys} emptyLabel="No key created." monospace />
               </CloudPanel>
@@ -246,8 +270,8 @@ export function AccountWorkspace() {
                       <option key={option}>{option}</option>
                     ))}
                   </select>
-                  <button type="button" onClick={connectIntegration} className="btn-primary focus-themed cursor-pointer rounded-lg px-3 py-2 font-display text-sm">
-                    Connect
+                  <button type="button" disabled={isMutating} onClick={connectIntegration} className="btn-primary focus-themed cursor-pointer rounded-lg px-3 py-2 font-display text-sm">
+                    {isMutating ? "Syncing" : "Connect"}
                   </button>
                 </div>
                 <ResourceList items={session.integrations} emptyLabel="No integration connected." />
@@ -257,8 +281,8 @@ export function AccountWorkspace() {
                 <p className="mt-3 font-serif text-sm text-secondary">
                   Register this browser as the local context for `{platformConfig.cli.command}`.
                 </p>
-                <button type="button" onClick={connectCli} className="btn-primary focus-themed mt-4 cursor-pointer rounded-lg px-3 py-2 font-display text-sm">
-                  Connect CLI
+                <button type="button" disabled={isMutating} onClick={connectCli} className="btn-primary focus-themed mt-4 cursor-pointer rounded-lg px-3 py-2 font-display text-sm">
+                  {isMutating ? "Syncing" : "Connect CLI"}
                 </button>
                 <ResourceList items={session.cliConnections} emptyLabel="No CLI connected." monospace />
               </CloudPanel>
@@ -269,8 +293,8 @@ export function AccountWorkspace() {
               <div className="mt-4 space-y-3">
                 {[
                   "Console initialized",
-                  "Local session active",
-                  "Resource state synced",
+                  "HTTP session active",
+                  "Resource state synced from synthosia-api",
                   "CLI ready for registration",
                 ].map((item) => (
                   <div key={item} className="surface-raised flex items-center gap-3 rounded-xl p-3">
