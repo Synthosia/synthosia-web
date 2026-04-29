@@ -10,5 +10,13 @@
       "Keeps Synthosia focused on product-grade platform primitives instead of portfolio-style presentation."
     ]
   },
-  "contributors": []
+  "contributors": [
+    {
+      "username": "yLorde",
+      "role": "Contributor",
+      "focus": "Open-source contributions and platform improvements.",
+      "description": "Contributes to Synthosia by helping improve the product and ecosystem.",
+      "details": []
+    }
+  ]
 }

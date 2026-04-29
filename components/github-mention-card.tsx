@@ -74,7 +74,7 @@ export async function GithubMentionCard({
           <p className="mt-3 max-w-3xl text-pretty font-serif text-[1.08rem] leading-[1.6] text-secondary">
             {profile.bio ?? focus ?? dictionary.githubMention.defaultBio}
           </p>
-          {focus ? (
+          {focus && focus !== profile.bio ? (
             <p className="mt-3 max-w-3xl text-pretty font-serif text-[1rem] leading-[1.55] text-secondary">
               {focus}
             </p>

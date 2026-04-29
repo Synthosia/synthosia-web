@@ -9,6 +9,8 @@ type AuthBenefitPanelProps = {
   benefits: string[];
   alternateHref: string;
   alternateLabel: string;
+  secureAccessLabel: string;
+  featureItems: readonly string[];
 };
 
 export function AuthBenefitPanel({
@@ -18,6 +20,8 @@ export function AuthBenefitPanel({
   benefits,
   alternateHref,
   alternateLabel,
+  secureAccessLabel,
+  featureItems,
 }: AuthBenefitPanelProps) {
   const icons = [ShieldIcon, KeyIcon, TerminalIcon];
 
@@ -29,7 +33,7 @@ export function AuthBenefitPanel({
             <BrandLogo />
             <span>Synthosia</span>
           </Link>
-          <span className="surface-raised rounded-full px-3 py-1 font-mono text-xs text-secondary">secure access</span>
+          <span className="surface-raised rounded-full px-3 py-1 font-mono text-xs text-secondary">{secureAccessLabel}</span>
         </div>
 
         <p className="mt-8 font-display text-xs uppercase brand-accent lg:mt-10">{eyebrow}</p>
@@ -44,19 +48,21 @@ export function AuthBenefitPanel({
       <div className="mt-7 grid gap-3">
         <div className="surface-raised relative rounded-2xl p-3 sm:p-4">
           <div className="absolute left-8 right-8 top-8 h-px bg-white/10" />
-          <div className="relative grid grid-cols-3 gap-3">
-            {["Identity", "Keys", "CLI"].map((item, index) => {
-              const Icon = icons[index];
-
-              return (
-                <div key={item} className="surface-panel rounded-xl p-3 transition duration-150 ease-out hover:-translate-y-0.5">
-                  <span className="surface-raised grid size-8 place-items-center rounded-lg brand-accent">
-                    <Icon className="size-4" />
-                  </span>
-                  <p className="mt-2 font-display text-xs text-primary sm:text-sm">{item}</p>
-                </div>
-              );
-            })}
+            <div className="relative grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {featureItems.map((item, index) => {
+                const FeatureIcon = icons[index % icons.length];
+                return (
+                  <div
+                    key={item}
+                    className="surface-panel rounded-xl p-3 transition duration-150 ease-out hover:-translate-y-0.5"
+                  >
+                    <span className="surface-raised grid size-8 place-items-center rounded-lg brand-accent">
+                      <FeatureIcon className="size-4" />
+                    </span>
+                    <p className="mt-2 font-display text-xs text-primary sm:text-sm">{item}</p>
+                  </div>
+                );
+              })}
           </div>
         </div>
 
