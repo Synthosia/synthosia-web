@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Alinhar utilitários `dark:` ao toggle da app (`.theme-dark` em <html>), não só a prefers-color-scheme */
+@custom-variant dark (&:where(.theme-dark, .theme-dark *));
+
 :root {
   --background: #f7f7fb;
   --foreground: #191625;

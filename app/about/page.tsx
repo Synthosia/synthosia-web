@@ -33,7 +33,20 @@ export default function AboutPage() {
               Related people and maintainers
             </h2>
           </div>
-          {visibleContributors.length > 0 ? (
+          <div className="surface-panel rounded-[18px] p-6 sm:p-8">
+            <p className="font-display text-xs uppercase brand-accent">Open contributor seats</p>
+            <h3 className="mt-3 text-balance font-display text-[1.7rem] leading-[1.12] text-primary">
+              No contributors are listed yet.
+            </h3>
+            <p className="mt-3 max-w-2xl text-pretty font-serif text-[1.05rem] leading-[1.6] text-secondary">
+              Synthosia is ready for collaborators who want to help with language tooling, framework design,
+              documentation, integrations, and open-source infrastructure.
+            </p>
+            <div className="mt-5">
+              <JoinContributorModal />
+            </div>
+          </div>
+          {visibleContributors.length > 0 && (
             <div className="grid gap-5">
               {visibleContributors.map((contributor) => (
                 <GithubMentionCard
@@ -45,20 +58,6 @@ export default function AboutPage() {
                   repositoryLimit={3}
                 />
               ))}
-            </div>
-          ) : (
-            <div className="surface-panel rounded-[18px] p-6 sm:p-8">
-              <p className="font-display text-xs uppercase brand-accent">Open contributor seats</p>
-              <h3 className="mt-3 text-balance font-display text-[1.7rem] leading-[1.12] text-primary">
-                No contributors are listed yet.
-              </h3>
-              <p className="mt-3 max-w-2xl text-pretty font-serif text-[1.05rem] leading-[1.6] text-secondary">
-                Synthosia is ready for collaborators who want to help with language tooling, framework design,
-                documentation, integrations, and open-source infrastructure.
-              </p>
-              <div className="mt-5">
-                <JoinContributorModal />
-              </div>
             </div>
           )}
         </section>

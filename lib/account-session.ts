@@ -2,6 +2,7 @@ export type AccountSession = {
   name: string;
   email: string;
   authProvider?: "email" | "google" | "github";
+  avatarUrl?: string;
   projects: string[];
   apiKeys: string[];
   integrations: string[];

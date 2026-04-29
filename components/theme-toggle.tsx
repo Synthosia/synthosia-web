@@ -34,6 +34,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       aria-label={dictionary.theme.toggle}
+      title={theme === "dark" ? dictionary.theme.dark : dictionary.theme.light}
       className="focus-themed group flex cursor-pointer items-center gap-2 rounded-full p-1 transition-transform duration-150 ease-out hover:scale-[1.02]"
     >
       <span className="theme-toggle-track relative grid h-8 w-[72px] grid-cols-2 rounded-full p-1">
