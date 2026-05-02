@@ -1,5 +1,5 @@
 /**
- * Normaliza o JSON `limits` devolvido pela API (Railway / DTO aninhado)
+ * Normaliza o JSON `limits` devolvido pela API (DTO aninhado / limites de instância)
  * para edição em GB / vCPU e para cartões de métricas.
  */
 

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Inter } from "next/font/google";
 import { motion } from "motion/react";
 import { CloudServiceConfigForm } from "@/components/cloud-service-config-form";
-import { CloudServiceStreamPanels } from "@/components/cloud-service-stream-panels";
 import { InstanceActionsSidebar } from "@/components/instance/InstanceActionsSidebar";
 import { InstanceMetricsStrip } from "@/components/instance/InstanceMetricsStrip";
 import { InstanceMonitoringCharts } from "@/components/instance/InstanceMonitoringCharts";
@@ -13,24 +12,15 @@ import {
   cloudStatusBadgeClass,
   cloudStatusDotClass,
   cloudStatusLabel,
-  mapCloudLifecycleFromStatus,
-  mapCloudManagedToRow,
+  mapComputeInstanceToRow,
+  mapComputeLifecycleFromStatus,
   type CloudLifecycle,
   type ServerRow,
 } from "@/components/server-row-types";
 import { cn } from "@/lib/cn";
 import type { AccountSession } from "@/lib/account-session";
 import { buildAccountPanelHref } from "@/lib/account-panel-url";
-import {
-  ApiClientError,
-  deleteCloudManagedService,
-  deployCloudService,
-  listCloudManagedServices,
-  recreateCloudManagedService,
-  restartCloudService,
-  stopCloudService,
-  type CloudManagedService,
-} from "@/lib/synthosia-api";
+import { ApiClientError, deleteComputeInstance, listComputeInstances, type ComputeInstance } from "@/lib/synthosia-api";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -53,19 +43,23 @@ export function ServerInstanceDetailPage({
   const sm = dictionary.panel.serverMonitoring as Record<string, string>;
   const canManage = session.role !== "viewer";
 
-  const [service, setService] = useState<CloudManagedService | null>(null);
+  const [service, setService] = useState<ComputeInstance | null>(null);
   const [loadErr, setLoadErr] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<DetailTab>("overview");
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
 
   const refresh = useCallback(async () => {
+    setLoading(true);
     try {
-      const list = await listCloudManagedServices();
+      const list = await listComputeInstances();
       setService(list.find((s) => s.id === cloudBindingId) ?? null);
       setLoadErr(false);
     } catch {
       setService(null);
       setLoadErr(true);
+    } finally {
+      setLoading(false);
     }
   }, [cloudBindingId]);
 
@@ -74,73 +68,17 @@ export function ServerInstanceDetailPage({
   }, [refresh]);
 
   const serverRow: ServerRow | null = useMemo(
-    () => (service ? mapCloudManagedToRow(service) : null),
+    () => (service ? mapComputeInstanceToRow(service) : null),
     [service],
   );
 
-  const railwayMissing = !!service?.railwayMissing;
-  const cloudLifecycle: CloudLifecycle = railwayMissing
-    ? "error"
-    : mapCloudLifecycleFromStatus(service?.deploymentStatus);
-  const latestDeploymentId = service?.latestDeploymentId ?? null;
-
-  const runDeploy = useCallback(async () => {
-    if (!canManage) return;
-    setLifecycleBusy(true);
-    try {
-      await deployCloudService(cloudBindingId);
-      await refresh();
-    } catch (e) {
-      window.alert(e instanceof ApiClientError ? e.message : sm.modalError ?? "Erro");
-    } finally {
-      setLifecycleBusy(false);
-    }
-  }, [canManage, cloudBindingId, refresh, sm.modalError]);
-
-  const runRestart = useCallback(async () => {
-    if (!canManage) return;
-    setLifecycleBusy(true);
-    try {
-      await restartCloudService(cloudBindingId);
-      await refresh();
-    } catch (e) {
-      window.alert(e instanceof ApiClientError ? e.message : sm.modalError ?? "Erro");
-    } finally {
-      setLifecycleBusy(false);
-    }
-  }, [canManage, cloudBindingId, refresh, sm.modalError]);
-
-  const runStop = useCallback(async () => {
-    if (!canManage) return;
-    setLifecycleBusy(true);
-    try {
-      await stopCloudService(cloudBindingId);
-      await refresh();
-    } catch (e) {
-      window.alert(e instanceof ApiClientError ? e.message : sm.modalError ?? "Erro");
-    } finally {
-      setLifecycleBusy(false);
-    }
-  }, [canManage, cloudBindingId, refresh, sm.modalError]);
-
-  const runRecreate = useCallback(async () => {
-    if (!canManage) return;
-    setLifecycleBusy(true);
-    try {
-      await recreateCloudManagedService(cloudBindingId);
-      await refresh();
-    } catch (e) {
-      window.alert(e instanceof ApiClientError ? e.message : sm.modalError ?? "Erro");
-    } finally {
-      setLifecycleBusy(false);
-    }
-  }, [canManage, cloudBindingId, refresh, sm.modalError]);
+  const cloudLifecycle: CloudLifecycle = service ? mapComputeLifecycleFromStatus(service.status) : "pending_deploy";
 
   const runDelete = useCallback(async () => {
     if (!canManage) return;
     setLifecycleBusy(true);
     try {
-      await deleteCloudManagedService(cloudBindingId);
+      await deleteComputeInstance(cloudBindingId);
       onBack();
     } catch (e) {
       window.alert(e instanceof ApiClientError ? e.message : sm.modalError ?? "Erro");
@@ -214,7 +152,29 @@ export function ServerInstanceDetailPage({
     [sm],
   );
 
-  if (loadErr || (!service && !loadErr)) {
+  if (loading) {
+    return (
+      <div
+        className={cn(
+          inter.className,
+          "mx-auto max-w-5xl space-y-4 text-[var(--text-primary)]",
+        )}
+      >
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-sm font-medium text-[#1a73e8] hover:underline"
+        >
+          ← {sm.instanceDetailBack}
+        </button>
+        <p className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+          {sm.loadingServers}
+        </p>
+      </div>
+    );
+  }
+
+  if (loadErr) {
     return (
       <div
         className={cn(
@@ -230,14 +190,32 @@ export function ServerInstanceDetailPage({
           ← {sm.instanceDetailBack}
         </button>
         <p className="rounded-2xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          {loadErr ? sm.consoleLoadServiceError : sm.loadingServers}
+          {sm.consoleLoadServiceError}
         </p>
       </div>
     );
   }
 
   if (!service || !serverRow) {
-    return null;
+    return (
+      <div
+        className={cn(
+          inter.className,
+          "mx-auto max-w-5xl space-y-4 text-[var(--text-primary)]",
+        )}
+      >
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-sm font-medium text-[#1a73e8] hover:underline"
+        >
+          ← {sm.instanceDetailBack}
+        </button>
+        <p className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+          {sm.modalSelectServer ?? "Instância não encontrada."}
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -268,28 +246,20 @@ export function ServerInstanceDetailPage({
             </h1>
             <p className="mt-2 font-mono text-xs text-[var(--text-secondary)]">
               <span className="mr-2 font-sans text-[11px] font-medium uppercase text-[var(--text-muted)]">
-                {sm.instanceDetailServiceId}
+                {sm.instanceDetailBindingId}
               </span>
-              {service.cloudServiceId}
+              {service.id}
             </p>
             <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
               <div>
                 <dt className="text-xs font-medium text-[var(--text-muted)]">{sm.region}</dt>
-                <dd className="font-medium text-[var(--text-primary)]">
-                  {service.region?.trim() || sm.instanceDetailRegionUnknown}
-                </dd>
-                {service.railwaySyncedAt?.trim() ? (
-                  <p className="mt-1 max-w-md text-[11px] leading-snug text-[var(--text-secondary)]">
-                    {sm.instanceDetailLastSynced.replace(
-                      "{at}",
-                      new Date(service.railwaySyncedAt).toLocaleString(),
-                    )}
-                  </p>
-                ) : null}
+                <dd className="font-medium text-[var(--text-primary)]">VPS / compute plane</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium text-[var(--text-muted)]">{sm.instanceDetailBindingId}</dt>
-                <dd className="font-mono text-xs text-[var(--text-secondary)]">{service.id}</dd>
+                <dt className="text-xs font-medium text-[var(--text-muted)]">Container</dt>
+                <dd className="font-mono text-xs text-[var(--text-secondary)]">
+                  {service.nerdctlContainerName?.trim() || "—"}
+                </dd>
               </div>
             </dl>
           </motion.div>
@@ -304,39 +274,6 @@ export function ServerInstanceDetailPage({
               <span className={cn("size-2 rounded-full", cloudStatusDotClass(cloudLifecycle))} />
               {cloudStatusLabel(serverRow, sm)}
             </span>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={!canManage || lifecycleBusy || cloudLifecycle === "provisioning" || railwayMissing}
-                onClick={() => void runDeploy()}
-                className="rounded-lg border border-[#1a73e8] bg-[#1a73e8] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#1557b0] disabled:opacity-45"
-              >
-                {sm.actionDeploy}
-              </button>
-              <button
-                type="button"
-                disabled={
-                  !canManage ||
-                  lifecycleBusy ||
-                  railwayMissing ||
-                  !latestDeploymentId ||
-                  cloudLifecycle === "pending_deploy" ||
-                  cloudLifecycle === "provisioning"
-                }
-                onClick={() => void runRestart()}
-                className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-raised)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--surface-interactive)] disabled:opacity-45"
-              >
-                {sm.actionRestart}
-              </button>
-              <button
-                type="button"
-                disabled={!canManage || lifecycleBusy || railwayMissing || cloudLifecycle !== "running"}
-                onClick={() => void runStop()}
-                className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-interactive)] px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:opacity-90 disabled:opacity-45"
-              >
-                {sm.actionStop}
-              </button>
-            </div>
           </div>
         </div>
 
@@ -363,11 +300,7 @@ export function ServerInstanceDetailPage({
         <div className="min-w-0 flex-1 space-y-8 lg:flex-[7]">
           {tab === "overview" ? (
             <>
-              <InstanceMetricsStrip
-                bindingId={cloudBindingId}
-                service={service}
-                labels={metricStripLabels}
-              />
+              <InstanceMetricsStrip bindingId={cloudBindingId} service={service} labels={metricStripLabels} />
               <div className="grid gap-4 lg:grid-cols-2">
                 <motion.section
                   initial={{ opacity: 0, y: 8 }}
@@ -381,24 +314,18 @@ export function ServerInstanceDetailPage({
                   <dl className="mt-4 space-y-3 text-sm">
                     <div className="grid gap-1 border-b border-[var(--border-subtle)] pb-3">
                       <dt className="text-xs font-medium text-[var(--text-muted)]">{sm.instanceDetailImage}</dt>
-                      <dd className="break-all font-mono text-xs text-[var(--text-primary)]">
-                        {service.dockerImage ?? "—"}
-                      </dd>
+                      <dd className="break-all font-mono text-xs text-[var(--text-primary)]">{service.dockerImage}</dd>
                     </div>
                     <div className="grid gap-1 border-b border-[var(--border-subtle)] pb-3">
-                      <dt className="text-xs font-medium text-[var(--text-muted)]">{sm.deploymentLabel}</dt>
+                      <dt className="text-xs font-medium text-[var(--text-muted)]">Estado</dt>
+                      <dd className="text-[var(--text-primary)]">{service.status}</dd>
+                    </div>
+                    <div className="grid gap-1">
+                      <dt className="text-xs font-medium text-[var(--text-muted)]">Traefik</dt>
                       <dd className="text-[var(--text-primary)]">
-                        {service.deploymentStatus?.trim() ? service.deploymentStatus : sm.activityNoDeploy}
+                        {service.traefikHosts?.length ? service.traefikHosts.join(", ") : "—"}
                       </dd>
                     </div>
-                    {service.latestDeploymentId ? (
-                      <div className="grid gap-1">
-                        <dt className="text-xs font-medium text-[var(--text-muted)]">Deployment ID</dt>
-                        <dd className="break-all font-mono text-xs text-[var(--text-secondary)]">
-                          {service.latestDeploymentId}
-                        </dd>
-                      </div>
-                    ) : null}
                   </dl>
                 </motion.section>
                 <motion.section
@@ -409,40 +336,11 @@ export function ServerInstanceDetailPage({
                 >
                   <h2 className="text-base font-semibold text-[var(--text-primary)]">{sm.actionTechnical}</h2>
                   <pre className="mt-4 max-h-[min(72vh,40rem)] min-h-[12rem] overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-4 font-mono text-[12px] leading-relaxed text-[var(--text-primary)] sm:text-[13px]">
-                    {JSON.stringify(
-                      {
-                        bindingId: service.id,
-                        cloudServiceId: service.cloudServiceId,
-                        name: service.name,
-                        region: service.region,
-                        dockerImage: service.dockerImage,
-                        limits: service.limits,
-                        deploymentStatus: service.deploymentStatus,
-                        latestDeploymentId: service.latestDeploymentId,
-                        railwaySyncedAt: service.railwaySyncedAt,
-                        railwayMissing: service.railwayMissing,
-                      },
-                      null,
-                      2,
-                    )}
+                    {JSON.stringify(service, null, 2)}
                   </pre>
                   <p className="mt-3 text-xs text-[var(--text-muted)]">{sm.modalTechnicalFootnote}</p>
                 </motion.section>
               </div>
-              {railwayMissing ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50/90 px-5 py-4 text-sm text-amber-950">
-                  <p className="font-semibold">{sm.orphanBannerTitle}</p>
-                  <p className="mt-1 text-xs leading-relaxed">{sm.orphanBannerBody}</p>
-                  <button
-                    type="button"
-                    disabled={!canManage || lifecycleBusy}
-                    onClick={() => void runRecreate()}
-                    className="mt-4 rounded-lg border border-cyan-600/30 bg-cyan-50 px-4 py-2 text-xs font-medium text-cyan-950 disabled:opacity-50"
-                  >
-                    {sm.actionRecreate}
-                  </button>
-                </div>
-              ) : null}
             </>
           ) : null}
 
@@ -466,13 +364,10 @@ export function ServerInstanceDetailPage({
           ) : null}
 
           {tab === "stream" ? (
-            <CloudServiceStreamPanels
-              cloudBindingId={cloudBindingId}
-              railwayMissing={railwayMissing}
-              showStatusPanel
-              visual="gcp"
-              layout="wide"
-            />
+            <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] p-5 text-sm text-[var(--text-secondary)]">
+              Streams de logs em tempo real para o compute plane serão adicionados quando a API expuser endpoint
+              dedicado.
+            </div>
           ) : null}
         </div>
 
@@ -483,11 +378,12 @@ export function ServerInstanceDetailPage({
               canManage={canManage}
               busy={lifecycleBusy}
               lifecycle={cloudLifecycle}
-              railwayMissing={railwayMissing}
-              hasDeployment={!!latestDeploymentId}
-              onDeploy={() => void runDeploy()}
-              onRestart={() => void runRestart()}
-              onStop={() => void runStop()}
+              railwayMissing={false}
+              hasDeployment={service.status === "running"}
+              hideLifecycleControls
+              onDeploy={() => {}}
+              onRestart={() => {}}
+              onStop={() => {}}
               onDelete={() => void runDelete()}
             />
           </aside>
@@ -497,7 +393,6 @@ export function ServerInstanceDetailPage({
   );
 }
 
-/** Link estável para a página de detalhes (usar em testes ou copy). */
 export function serverInstanceDetailHref(bindingId: string): string {
   return buildAccountPanelHref("servers", "srv-instance-detail", bindingId);
 }

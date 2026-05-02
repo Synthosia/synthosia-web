@@ -6,12 +6,9 @@ import { cn } from "@/lib/cn";
 import type { AccountSession } from "@/lib/account-session";
 import {
   ApiClientError,
-  createCloudManagedService,
+  createComputeInstance,
   createServerInstance,
-  getCloudServiceMetrics,
   listGithubRepositories,
-  updateCloudServiceLimits,
-  type CloudMetricsResponse,
   type GithubRepository,
 } from "@/lib/synthosia-api";
 import type { ServerRow } from "@/components/server-row-types";
@@ -277,15 +274,16 @@ function TechnicalModal({
   onClose: () => void;
 }) {
   if (!selected) return null;
-  const payload = selected.managedCloud
+  const payload = selected.managedCompute
     ? {
-        kind: "cloud" as const,
-        bindingId: selected.managedCloud.id,
-        cloudServiceId: selected.managedCloud.cloudServiceId,
-        name: selected.managedCloud.name,
-        region: selected.managedCloud.region,
-        dockerImage: selected.managedCloud.dockerImage,
-        limits: selected.managedCloud.limits,
+        kind: "compute" as const,
+        id: selected.managedCompute.id,
+        name: selected.managedCompute.name,
+        dockerImage: selected.managedCompute.dockerImage,
+        memoryMb: selected.managedCompute.memoryMb,
+        cpuMillicores: selected.managedCompute.cpuMillicores,
+        traefikHosts: selected.managedCompute.traefikHosts,
+        status: selected.managedCompute.status,
       }
     : selected.sshInstance
       ? { kind: "ssh" as const, ...selected.sshInstance }
@@ -336,35 +334,7 @@ function MonitoringModal({
   t: ModalStrings;
   onClose: () => void;
 }) {
-  const rw = selected?.managedCloud;
-  const [hours, setHours] = useState(6);
-  const [refreshTick, setRefreshTick] = useState(0);
-  const [data, setData] = useState<CloudMetricsResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!rw?.id) return;
-    let cancelled = false;
-    setLoading(true);
-    setErr(null);
-    getCloudServiceMetrics(rw.id, hours)
-      .then((res) => {
-        if (!cancelled) setData(res);
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          setData(null);
-          setErr(e instanceof ApiClientError ? e.message : t.modalError!);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [rw?.id, hours, refreshTick, t.modalError]);
+  const rw = selected?.managedCompute;
 
   return (
     <ModalFrame title={t.modalMonitoringTitle!} onClose={onClose} closeLabel={t.modalClose!}>
@@ -374,55 +344,10 @@ function MonitoringModal({
         <p className="text-sm text-gray-600">{t.modalMonitoringSshOnly!}</p>
       ) : (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="text-xs font-medium text-gray-700">
-              {t.modalMonitoringHours!}
-              <select
-                value={hours}
-                onChange={(e) => setHours(Number(e.target.value))}
-                className="mt-1 block rounded-md border border-gray-200 px-2 py-1.5 text-sm"
-              >
-                {[1, 3, 6, 12, 24, 48, 72].map((h) => (
-                  <option key={h} value={h}>
-                    {h}h
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button
-              type="button"
-              onClick={() => setRefreshTick((x) => x + 1)}
-              disabled={loading}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium disabled:opacity-50"
-            >
-              {loading ? t.modalMonitoringLoading! : t.modalMonitoringLoad!}
-            </button>
-          </div>
-          {err ? <p className="text-sm text-red-700">{err}</p> : null}
-          {!loading && data && data.series.length === 0 ? (
-            <p className="text-sm text-gray-600">{t.modalMonitoringEmpty!}</p>
-          ) : null}
-          <div className="space-y-4">
-            {data?.series.map((s) => {
-              const vals = s.points.map((p) => p.value);
-              const stroke = s.measurement.includes("CPU") ? "#14b8a6" : "#f59e0b";
-              const grad = s.measurement.includes("CPU") ? "#14b8a6" : "#fbbf24";
-              return (
-                <ModalChart
-                  key={s.measurement}
-                  values={vals.length >= 2 ? vals : [...vals, ...vals]}
-                  stroke={stroke}
-                  gradFrom={grad}
-                  label={s.measurement}
-                />
-              );
-            })}
-          </div>
-          {data ? (
-            <p className="text-[11px] text-gray-500">
-              {t.modalMonitoringWindow!.replace("{h}", String(data.windowHours))}
-            </p>
-          ) : null}
+          <p className="text-sm text-gray-600">
+            Métricas em tempo real do compute plane serão integradas quando os agentes reportarem séries à API.
+          </p>
+          <p className="font-mono text-xs text-gray-500">Instância: {rw.id}</p>
         </div>
       )}
     </ModalFrame>
@@ -578,40 +503,25 @@ function NewServerModal({
             setBusy(false);
             return;
           }
-          const created = await createCloudManagedService({
+          const mRaw = memoryGb.trim();
+          const vRaw = vcpus.trim();
+          const mGb = mRaw ? Number(mRaw) : NaN;
+          const vcpu = vRaw ? Number(vRaw) : NaN;
+          const memoryMb =
+            mRaw && !Number.isNaN(mGb) ? Math.max(32, Math.round(mGb * 1024)) : undefined;
+          const cpuMillicores =
+            vRaw && !Number.isNaN(vcpu) ? Math.max(50, Math.round(vcpu * 1000)) : undefined;
+          await createComputeInstance({
             name: n,
             dockerImage: img,
+            memoryMb,
+            cpuMillicores,
+            traefikHosts: [],
           });
-          const mRaw = memoryGb.trim();
-          const vRaw = vcpus.trim();
-          const mParsed = mRaw ? Number(mRaw) : undefined;
-          const vParsed = vRaw ? Number(vRaw) : undefined;
-          const m = mParsed != null && !Number.isNaN(mParsed) ? mParsed : undefined;
-          const v = vParsed != null && !Number.isNaN(vParsed) ? vParsed : undefined;
-          if (m !== undefined || v !== undefined) {
-            await updateCloudServiceLimits(created.id, { memoryGb: m, vcpus: v });
-          }
         } else {
-          const repo = sourceRepo.trim();
-          if (!repo) {
-            setMsg(t.modalCloudRepoRequired!);
-            setBusy(false);
-            return;
-          }
-          const created = await createCloudManagedService({
-            name: n,
-            sourceRepo: repo,
-            branch: branch.trim() || undefined,
-          });
-          const mRaw = memoryGb.trim();
-          const vRaw = vcpus.trim();
-          const mParsed = mRaw ? Number(mRaw) : undefined;
-          const vParsed = vRaw ? Number(vRaw) : undefined;
-          const m = mParsed != null && !Number.isNaN(mParsed) ? mParsed : undefined;
-          const v = vParsed != null && !Number.isNaN(vParsed) ? vParsed : undefined;
-          if (m !== undefined || v !== undefined) {
-            await updateCloudServiceLimits(created.id, { memoryGb: m, vcpus: v });
-          }
+          setMsg(t.modalCloudRepoRequired ?? "Use o separador Imagem Docker para o compute plane.");
+          setBusy(false);
+          return;
         }
       } else {
         await createServerInstance({

@@ -313,9 +313,9 @@ const ptBR = {
       cloudStateOrphan: "Ausente no fornecedor cloud",
       cloudStateSleeping: "Em repouso",
       cloudStateStopped: "Parado",
-      orphanBannerTitle: "Este serviço já não existe na Railway",
+      orphanBannerTitle: "Recurso ausente no plano de computação",
       orphanBannerBody:
-        "O registo na Synthosia aponta para um ID que foi removido. Pode recriar um serviço novo com a mesma imagem ou remover só o registo local (sem chamar a API do fornecedor).",
+        "O registo na Synthosia aponta para um ID que já não existe no agente/VPS. Pode criar uma nova instância ou remover só o registo local.",
       actionRecreate: "Recriar serviço",
       actionForgetBinding: "Remover registo local",
       forgetConfirm:
@@ -434,7 +434,7 @@ const ptBR = {
       instanceDetailMetricLimitsHint: "Memória e vCPU deste serviço",
       loadError: "Não foi possível carregar os servidores. Verifique a sessão e a API.",
       emptyServers:
-        "Ainda não há servidores (SSH ou geridos pela Synthosia Cloud). Crie instâncias SSH ou serviços em /v1/infrastructure/cloud-services.",
+        "Ainda não há servidores (SSH ou compute na VPS). Crie instâncias SSH ou `POST /v1/infrastructure/instances` (imagem Docker).",
       loadingServers: "A carregar servidores…",
       actionTechnical: "Detalhe técnico",
       actionConfig: "Configuração",

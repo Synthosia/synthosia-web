@@ -9,7 +9,7 @@ import {
 } from "@/components/instance/cloud-metrics";
 import { useCloudInstanceMetrics } from "@/components/instance/use-cloud-instance-metrics";
 import { cn } from "@/lib/cn";
-import type { CloudManagedService } from "@/lib/synthosia-api";
+import type { ComputeInstance } from "@/lib/synthosia-api";
 
 function MetricCard({
   title,
@@ -65,7 +65,7 @@ export function InstanceMetricsStrip({
   labels,
 }: {
   bindingId: string;
-  service: CloudManagedService;
+  service: ComputeInstance;
   labels: {
     cpu: string;
     cpuHint: string;
@@ -81,7 +81,7 @@ export function InstanceMetricsStrip({
 }) {
   const { data, loading } = useCloudInstanceMetrics(bindingId, 24);
   const { cpuPct, memPct, netMbps } = extractMetricSeries(data);
-  const lim = parseLimits(service.limits);
+  const lim = parseLimits(null);
 
   const cpuVal =
     cpuPct.length >= 2 ? `${lastOrZero(cpuPct)}` : loading ? "…" : "—";
@@ -90,14 +90,8 @@ export function InstanceMetricsStrip({
   const netLast = netMbps.length ? netMbps[netMbps.length - 1]! : 0;
   const netVal = netMbps.length >= 2 ? `${netLast.toFixed(2)}` : loading ? "…" : "—";
 
-  const diskPrimary =
-    lim.memoryGb != null
-      ? `${lim.memoryGb}`
-      : lim.vcpus != null
-        ? `${lim.vcpus} vCPU`
-        : "—";
-  const diskSecondary =
-    lim.memoryGb != null ? "GB RAM" : lim.vcpus != null ? labels.diskHint : "";
+  const diskPrimary = `${service.memoryMb} MB / ${service.cpuMillicores} mCPU`;
+  const diskSecondary = labels.diskHint;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

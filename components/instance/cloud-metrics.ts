@@ -1,8 +1,11 @@
-import type { CloudMetricsResponse } from "@/lib/synthosia-api";
 import { limitsProvisionedNumeric } from "@/lib/cloud-service-limits";
 
+type MetricSeriesResponse = {
+  series: { measurement: string; points: { ts: number; value: number }[] }[];
+};
+
 /** Extrai séries normalizadas para sparklines e gráficos (última janela da API). */
-export function extractMetricSeries(res: CloudMetricsResponse | null | undefined): {
+export function extractMetricSeries(res: MetricSeriesResponse | null | undefined): {
   cpuPct: number[];
   memPct: number[];
   netMbps: number[];

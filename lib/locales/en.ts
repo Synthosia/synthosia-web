@@ -311,9 +311,9 @@ const en = {
       cloudStateOrphan: "Missing at cloud provider",
       cloudStateSleeping: "Sleeping",
       cloudStateStopped: "Stopped",
-      orphanBannerTitle: "This service no longer exists in Railway",
+      orphanBannerTitle: "Resource missing on the compute plane",
       orphanBannerBody:
-        "The Synthosia record points to an ID that was removed. You can recreate a new service with the same image or remove only the local record (without calling the provider API).",
+        "The Synthosia record points to an ID that no longer exists on the agent/VPS. Create a new instance or remove only the local record.",
       actionRecreate: "Recreate service",
       actionForgetBinding: "Remove local record",
       forgetConfirm:
@@ -432,7 +432,7 @@ const en = {
       instanceDetailMetricLimitsHint: "Memory & vCPU for this service",
       loadError: "Could not load servers. Check your session and the API.",
       emptyServers:
-        "No servers yet (SSH or Synthosia Cloud managed). Create SSH instances or POST /v1/infrastructure/cloud-services.",
+        "No servers yet (SSH or VPS compute). Create SSH instances or `POST /v1/infrastructure/instances` (Docker image).",
       loadingServers: "Loading servers…",
       actionTechnical: "Technical details",
       actionConfig: "Configuration",
