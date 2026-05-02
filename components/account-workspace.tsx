@@ -29,7 +29,11 @@ import { DatabaseMonitoringDashboard } from "@/components/database-monitoring-da
 import { ThemeToggle } from "@/components/theme-toggle";
 import { type AccountSession } from "@/lib/account-session";
 import { DEFAULT_PANEL_ITEM, findPanelNavItem, type PanelCategory } from "@/lib/account-panel";
-import { buildAccountPanelHref, parseAccountPanelSearchParams } from "@/lib/account-panel-url";
+import {
+  buildAccountPanelHref,
+  parseAccountPanelSearchParams,
+  type InstanceDetailTab,
+} from "@/lib/account-panel-url";
 import {
   buildPanelBreadcrumb,
   resolvePanelNavSections,
@@ -55,10 +59,12 @@ export function AccountWorkspace({
   initialCategory = "dashboard",
   initialSection = DEFAULT_PANEL_ITEM.dashboard,
   initialCloudBindingId,
+  initialInstanceDetailTab,
 }: {
   initialCategory?: PanelCategory;
   initialSection?: string;
   initialCloudBindingId?: string;
+  initialInstanceDetailTab?: InstanceDetailTab;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -71,6 +77,9 @@ export function AccountWorkspace({
   const [activeCategory, setActiveCategory] = useState<PanelCategory>(initialCategory);
   const [activeNav, setActiveNav] = useState(initialSection);
   const [cloudBindingId, setCloudBindingId] = useState<string | null>(() => initialCloudBindingId ?? null);
+  const [instanceDetailTab, setInstanceDetailTab] = useState<InstanceDetailTab | undefined>(
+    () => initialInstanceDetailTab,
+  );
 
   const { dictionary } = useLanguage();
   const p = dictionary.panel;
@@ -87,17 +96,20 @@ export function AccountWorkspace({
     const cat = searchParams.get("cat");
     const section = searchParams.get("section");
     const cloud = searchParams.get("cloud");
-    if (cat === null && section === null && cloud === null) {
+    const view = searchParams.get("view");
+    if (cat === null && section === null && cloud === null && view === null) {
       return;
     }
     const parsed = parseAccountPanelSearchParams({
       cat: cat ?? undefined,
       section: section ?? undefined,
       cloud: cloud ?? undefined,
+      view: view ?? undefined,
     });
     setActiveCategory(parsed.category);
     setActiveNav(parsed.section);
     setCloudBindingId(parsed.cloudBindingId ?? null);
+    setInstanceDetailTab(parsed.instanceDetailTab);
   }, [searchParams]);
 
   function selectCategory(cat: PanelCategory) {
@@ -281,6 +293,7 @@ export function AccountWorkspace({
                     ? cloudBindingId
                     : null
                 }
+                instanceDetailTab={activeNav === "srv-instance-detail" ? instanceDetailTab : undefined}
                 onNavigateCloud={(bindingId) => replacePanelUrl(activeCategory, activeNav, bindingId)}
                 onBackToServerList={() => replacePanelUrl("servers", "srv-instances", cloudBindingId)}
                 onOpenCloudDetail={(bindingId) =>
@@ -301,6 +314,7 @@ function AccountPanelMain({
   session,
   consoleDashboard,
   cloudBindingId,
+  instanceDetailTab,
   onNavigateCloud,
   onBackToServerList,
   onOpenCloudDetail,
@@ -310,6 +324,7 @@ function AccountPanelMain({
   session: AccountSession;
   consoleDashboard: ConsoleDashboard | null;
   cloudBindingId: string | null;
+  instanceDetailTab?: InstanceDetailTab;
   onNavigateCloud: (bindingId: string | null) => void;
   onBackToServerList: () => void;
   onOpenCloudDetail: (bindingId: string) => void;
@@ -341,6 +356,7 @@ function AccountPanelMain({
       <ServerInstanceDetailPage
         session={session}
         cloudBindingId={cloudBindingId}
+        initialDetailTab={instanceDetailTab}
         onBack={onBackToServerList}
       />
     ) : (

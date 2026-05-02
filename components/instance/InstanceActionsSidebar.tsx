@@ -50,15 +50,16 @@ export function InstanceActionsSidebar({
 }) {
   const running = lifecycle === "running";
   const provisioning = lifecycle === "provisioning";
+  const removing = lifecycle === "removing";
   const canStop = running && !railwayMissing;
   const canRestart =
     hasDeployment && !railwayMissing && lifecycle !== "pending_deploy" && lifecycle !== "provisioning";
 
   const healthItems: { label: string; ok: boolean }[] = [
-    { label: labels.healthCpu, ok: !railwayMissing && !provisioning },
-    { label: labels.healthDeploy, ok: hasDeployment && !railwayMissing },
-    { label: labels.healthSync, ok: !railwayMissing },
-    { label: labels.healthApi, ok: !railwayMissing },
+    { label: labels.healthCpu, ok: !railwayMissing && !provisioning && !removing },
+    { label: labels.healthDeploy, ok: hasDeployment && !railwayMissing && !removing },
+    { label: labels.healthSync, ok: !railwayMissing && !removing },
+    { label: labels.healthApi, ok: !railwayMissing && !removing },
   ];
 
   return (
@@ -117,7 +118,7 @@ export function InstanceActionsSidebar({
           ) : null}
           <button
             type="button"
-            disabled={!canManage || busy}
+            disabled={!canManage || busy || lifecycle === "removing"}
             onClick={() => {
               if (window.confirm(labels.confirmDelete)) onDelete();
             }}

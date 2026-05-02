@@ -8,7 +8,7 @@ import { ApiClientError, deleteComputeInstance, listComputeInstances, type Compu
 
 /**
  * Consola de instância no compute plane (VPS / jobs).
- * Não há stream SSE dedicado; use a página de detalhe para visão completa.
+ * Stream SSE na página de detalhe (separador «Consola de stream»).
  */
 export function CloudServiceConsole({
   session,

@@ -8,6 +8,7 @@ import {
   ApiClientError,
   createComputeInstance,
   createServerInstance,
+  jobProvisioningEventsUrl,
   listGithubRepositories,
   type GithubRepository,
 } from "@/lib/synthosia-api";
@@ -389,8 +390,83 @@ function NewServerModal({
   const [dockerSearchBusy, setDockerSearchBusy] = useState(false);
   const [dockerListOpen, setDockerListOpen] = useState(false);
   const dockerComboRef = useRef<HTMLDivElement>(null);
+  const [provisionJobId, setProvisionJobId] = useState<string | null>(null);
+  const [provisionLines, setProvisionLines] = useState<string[]>([]);
+  const [provisionFailed, setProvisionFailed] = useState<string | null>(null);
+  const provisionEndRef = useRef<HTMLDivElement>(null);
+  const provisionEndedRef = useRef(false);
 
   const debouncedDockerQ = useDebounced(dockerImage, 380);
+
+  const resetFormFields = useCallback(() => {
+    setName("");
+    setDockerImage("");
+    setSourceRepo("");
+    setBranch("");
+    setMemoryGb("");
+    setVcpus("");
+    setHost("");
+    setPort("22");
+    setDeployMode("image");
+    setAppProfile("custom");
+    setEnvironment("production");
+  }, []);
+
+  const closeProvisionAndModal = useCallback(async () => {
+    await onServersChanged();
+    resetFormFields();
+    setProvisionJobId(null);
+    setProvisionLines([]);
+    setProvisionFailed(null);
+    onClose();
+  }, [onClose, onServersChanged, resetFormFields]);
+
+  useEffect(() => {
+    if (!provisionJobId || provisionFailed) return;
+    provisionEndedRef.current = false;
+    const url = jobProvisioningEventsUrl(provisionJobId);
+    const es = new EventSource(url, { withCredentials: true });
+    const onLog = (e: MessageEvent) => {
+      try {
+        const d = JSON.parse(e.data as string) as { message?: string };
+        const line = d.message?.trim();
+        if (line) setProvisionLines((prev) => [...prev, line]);
+      } catch {
+        /* ignore */
+      }
+    };
+    const onDone = (e: MessageEvent) => {
+      try {
+        const d = JSON.parse(e.data as string) as { status?: string; error?: string | null };
+        provisionEndedRef.current = true;
+        es.close();
+        if (d.status === "succeeded") {
+          void closeProvisionAndModal();
+        } else {
+          setProvisionFailed(d.error ?? "O provisionamento falhou.");
+          void onServersChanged();
+        }
+      } catch {
+        provisionEndedRef.current = true;
+        es.close();
+        setProvisionFailed("Resposta inválida do servidor.");
+      }
+    };
+    es.addEventListener("log", onLog as EventListener);
+    es.addEventListener("done", onDone as EventListener);
+    es.onerror = () => {
+      if (provisionEndedRef.current) return;
+      es.close();
+      setProvisionFailed((prev) => prev ?? "Ligação em tempo real interrompida. Verifique o agente e a API.");
+    };
+    return () => {
+      es.close();
+    };
+  }, [provisionJobId, provisionFailed, closeProvisionAndModal, onServersChanged]);
+
+  useEffect(() => {
+    provisionEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [provisionLines]);
 
   useEffect(() => {
     if (!dockerListOpen) return;
@@ -511,13 +587,17 @@ function NewServerModal({
             mRaw && !Number.isNaN(mGb) ? Math.max(32, Math.round(mGb * 1024)) : undefined;
           const cpuMillicores =
             vRaw && !Number.isNaN(vcpu) ? Math.max(50, Math.round(vcpu * 1000)) : undefined;
-          await createComputeInstance({
+          const created = await createComputeInstance({
             name: n,
             dockerImage: img,
             memoryMb,
             cpuMillicores,
             traefikHosts: [],
           });
+          setProvisionJobId(created.jobId);
+          setProvisionLines(["A aguardar o agente e o job de provisionamento…"]);
+          setBusy(false);
+          return;
         } else {
           setMsg(t.modalCloudRepoRequired ?? "Use o separador Imagem Docker para o compute plane.");
           setBusy(false);
@@ -565,6 +645,38 @@ function NewServerModal({
         <p className="text-sm text-amber-800">{t.modalViewerHint!}</p>
       ) : (
         <div className="space-y-5">
+          {provisionJobId ? (
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-gray-800">
+                {provisionFailed
+                  ? "O provisionamento terminou com erro"
+                  : "A configurar a instância no agente (tempo real)"}
+              </p>
+              <div className="max-h-72 overflow-y-auto rounded-lg border border-gray-800 bg-[#0f1115] p-3 font-mono text-[11px] leading-relaxed text-gray-100">
+                {provisionLines.map((l, i) => (
+                  <div key={`${i}-${l.slice(0, 40)}`}>{l}</div>
+                ))}
+                <div ref={provisionEndRef} />
+              </div>
+              {provisionFailed ? (
+                <>
+                  <p className="text-sm text-red-600">{provisionFailed}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProvisionJobId(null);
+                      setProvisionLines([]);
+                      setProvisionFailed(null);
+                    }}
+                    className="w-full rounded-lg border border-gray-300 bg-white py-2.5 text-sm font-semibold text-gray-800 shadow-sm transition hover:bg-gray-50"
+                  >
+                    Voltar ao formulário
+                  </button>
+                </>
+              ) : null}
+            </div>
+          ) : (
+            <>
           <div className="rounded-xl bg-slate-100/90 p-1 ring-1 ring-slate-200/80">
             <div className="flex gap-0.5">
               <SegmentedButton active={tab === "cloud"} onClick={() => setTab("cloud")}>
@@ -803,6 +915,8 @@ function NewServerModal({
           >
             {t.modalNewCreate!}
           </button>
+            </>
+          )}
         </div>
       )}
     </ModalFrame>

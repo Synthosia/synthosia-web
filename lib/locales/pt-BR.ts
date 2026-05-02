@@ -313,6 +313,7 @@ const ptBR = {
       cloudStateOrphan: "Ausente no fornecedor cloud",
       cloudStateSleeping: "Em repouso",
       cloudStateStopped: "Parado",
+      cloudStateRemoving: "Remoção em curso",
       orphanBannerTitle: "Recurso ausente no plano de computação",
       orphanBannerBody:
         "O registo na Synthosia aponta para um ID que já não existe no agente/VPS. Pode criar uma nova instância ou remover só o registo local.",
@@ -400,6 +401,9 @@ const ptBR = {
       tabOverview: "Visão geral",
       tabConfiguration: "Configuração",
       tabStream: "Consola de stream",
+      instanceDetailOpenStreamWindow: "Abrir consola numa nova janela",
+      instanceDetailStreamIntro:
+        "Fluxo em tempo real (SSE) para estado, registos do contentor e linhas do job de provisionamento. Requer sessão iniciada neste domínio.",
       instanceDetailTabsAria: "Secções da instância",
       instanceDetailProperties: "Propriedades",
       instanceDetailImage: "Imagem do contentor",

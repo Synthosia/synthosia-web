@@ -311,6 +311,7 @@ const en = {
       cloudStateOrphan: "Missing at cloud provider",
       cloudStateSleeping: "Sleeping",
       cloudStateStopped: "Stopped",
+      cloudStateRemoving: "Removal in progress",
       orphanBannerTitle: "Resource missing on the compute plane",
       orphanBannerBody:
         "The Synthosia record points to an ID that no longer exists on the agent/VPS. Create a new instance or remove only the local record.",
@@ -398,6 +399,9 @@ const en = {
       tabOverview: "Overview",
       tabConfiguration: "Configuration",
       tabStream: "Stream console",
+      instanceDetailOpenStreamWindow: "Open console in new window",
+      instanceDetailStreamIntro:
+        "Live SSE stream for status, container logs, and provision job lines. You must be signed in on this site.",
       instanceDetailTabsAria: "Instance sections",
       instanceDetailProperties: "Properties",
       instanceDetailImage: "Container image",

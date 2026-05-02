@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Inter } from "next/font/google";
 import { motion } from "motion/react";
 import { CloudServiceConfigForm } from "@/components/cloud-service-config-form";
+import { CloudServiceStreamPanels } from "@/components/cloud-service-stream-panels";
 import { InstanceActionsSidebar } from "@/components/instance/InstanceActionsSidebar";
 import { InstanceMetricsStrip } from "@/components/instance/InstanceMetricsStrip";
 import { InstanceMonitoringCharts } from "@/components/instance/InstanceMonitoringCharts";
@@ -19,7 +20,7 @@ import {
 } from "@/components/server-row-types";
 import { cn } from "@/lib/cn";
 import type { AccountSession } from "@/lib/account-session";
-import { buildAccountPanelHref } from "@/lib/account-panel-url";
+import { buildAccountPanelHref, type InstanceDetailTab } from "@/lib/account-panel-url";
 import { ApiClientError, deleteComputeInstance, listComputeInstances, type ComputeInstance } from "@/lib/synthosia-api";
 
 const inter = Inter({
@@ -28,15 +29,16 @@ const inter = Inter({
   display: "swap",
 });
 
-type DetailTab = "overview" | "monitoring" | "configuration" | "stream";
-
 export function ServerInstanceDetailPage({
   session,
   cloudBindingId,
+  initialDetailTab,
   onBack,
 }: {
   session: AccountSession;
   cloudBindingId: string;
+  /** A partir da query `view=` (ex.: abrir consola de stream noutra janela). */
+  initialDetailTab?: InstanceDetailTab;
   onBack: () => void;
 }) {
   const { dictionary } = useLanguage();
@@ -46,26 +48,41 @@ export function ServerInstanceDetailPage({
   const [service, setService] = useState<ComputeInstance | null>(null);
   const [loadErr, setLoadErr] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<DetailTab>("overview");
+  const [tab, setTab] = useState<InstanceDetailTab>(() => initialDetailTab ?? "overview");
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const list = await listComputeInstances();
-      setService(list.find((s) => s.id === cloudBindingId) ?? null);
-      setLoadErr(false);
-    } catch {
-      setService(null);
-      setLoadErr(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [cloudBindingId]);
+  const refresh = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!opts?.silent) setLoading(true);
+      try {
+        const list = await listComputeInstances();
+        setService(list.find((s) => s.id === cloudBindingId) ?? null);
+        setLoadErr(false);
+      } catch {
+        setService(null);
+        setLoadErr(true);
+      } finally {
+        if (!opts?.silent) setLoading(false);
+      }
+    },
+    [cloudBindingId],
+  );
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    setTab(initialDetailTab ?? "overview");
+  }, [cloudBindingId, initialDetailTab]);
+
+  useEffect(() => {
+    if (!service) return;
+    const st = service.status;
+    if (st !== "pending" && st !== "destroying") return;
+    const id = window.setInterval(() => void refresh({ silent: true }), 4000);
+    return () => window.clearInterval(id);
+  }, [service, refresh]);
 
   const serverRow: ServerRow | null = useMemo(
     () => (service ? mapComputeInstanceToRow(service) : null),
@@ -364,9 +381,32 @@ export function ServerInstanceDetailPage({
           ) : null}
 
           {tab === "stream" ? (
-            <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] p-5 text-sm text-[var(--text-secondary)]">
-              Streams de logs em tempo real para o compute plane serão adicionados quando a API expuser endpoint
-              dedicado.
+            <div className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
+                  {sm.instanceDetailStreamIntro ??
+                    "Fluxo em tempo real (SSE) para estado, registos do contentor e job de provisionamento."}
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.open(
+                      buildAccountPanelHref("servers", "srv-instance-detail", cloudBindingId, "stream"),
+                      "_blank",
+                      "noopener,noreferrer",
+                    )
+                  }
+                  className="shrink-0 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] shadow-sm transition hover:bg-[var(--surface-interactive)]"
+                >
+                  {sm.instanceDetailOpenStreamWindow ?? "Abrir consola numa nova janela"}
+                </button>
+              </div>
+              <CloudServiceStreamPanels
+                cloudBindingId={cloudBindingId}
+                railwayMissing={false}
+                visual="gcp"
+                layout="wide"
+              />
             </div>
           ) : null}
         </div>
@@ -393,6 +433,6 @@ export function ServerInstanceDetailPage({
   );
 }
 
-export function serverInstanceDetailHref(bindingId: string): string {
-  return buildAccountPanelHref("servers", "srv-instance-detail", bindingId);
+export function serverInstanceDetailHref(bindingId: string, view?: InstanceDetailTab): string {
+  return buildAccountPanelHref("servers", "srv-instance-detail", bindingId, view);
 }

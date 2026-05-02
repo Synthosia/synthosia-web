@@ -211,6 +211,11 @@ export function cloudManagedServiceStreamUrl(computeInstanceId: string): string 
   return `${API_URL}${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(computeInstanceId)}/stream`;
 }
 
+/** SSE durante o job de provision (linhas `log` + `done`). */
+export function jobProvisioningEventsUrl(jobId: string): string {
+  return `${API_URL}/v1/infrastructure/jobs/${encodeURIComponent(jobId)}/events`;
+}
+
 /** Instância de workload no compute plane (VPS + agente + jobs). */
 export type ComputeInstance = {
   id: string;
