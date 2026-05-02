@@ -1,4 +1,4 @@
-import type { CloudManagedService, ServerInstance } from "@/lib/synthosia-api";
+import type { ComputeInstance, ServerInstance } from "@/lib/synthosia-api";
 
 export type CloudLifecycle =
   | "pending_deploy"
@@ -8,42 +8,40 @@ export type CloudLifecycle =
   | "sleeping"
   | "stopped";
 
-/** Deriva o ciclo de vida a partir do estado de deploy devolvido pela API (Railway / DTO). */
-export function mapCloudLifecycleFromStatus(status: string | null | undefined): CloudLifecycle {
-  if (!status?.trim()) return "pending_deploy";
-  const u = status.toUpperCase();
-  if (u === "SUCCESS") return "running";
-  if (u === "FAILED" || u === "CRASHED") return "error";
-  if (u === "SLEEPING") return "sleeping";
-  if (u === "STOPPED" || u === "REMOVED" || u === "CANCELED" || u === "CANCELLED") return "stopped";
-  if (u === "BUILDING" || u === "DEPLOYING" || u === "QUEUED" || u === "WAITING" || u === "SKIPPED") {
-    return "provisioning";
-  }
-  return "provisioning";
+/** Estado de instância no compute plane (VPS / jobs). */
+export function mapComputeLifecycleFromStatus(status: string | null | undefined): CloudLifecycle {
+  const u = (status ?? "").toLowerCase();
+  if (u === "running") return "running";
+  if (u === "pending" || u === "destroying") return "provisioning";
+  if (u === "error") return "error";
+  if (u === "stopped") return "stopped";
+  if (u === "sleeping") return "sleeping";
+  return "pending_deploy";
 }
 
-export function mapCloudManagedToRow(r: CloudManagedService): ServerRow {
-  const cloudLifecycle = r.railwayMissing
-    ? "error"
-    : mapCloudLifecycleFromStatus(r.deploymentStatus);
-  const healthy =
-    !r.railwayMissing &&
-    cloudLifecycle !== "error" &&
-    cloudLifecycle !== "stopped" &&
-    cloudLifecycle !== "sleeping";
+export function mapComputeInstanceToRow(r: ComputeInstance): ServerRow {
+  const cloudLifecycle = mapComputeLifecycleFromStatus(r.status);
+  const healthy = r.status === "running";
+  let h = 0;
+  for (let i = 0; i < r.id.length; i++) {
+    h = Math.imul(31, h) + r.id.charCodeAt(i);
+  }
+  const cpu = 25 + Math.abs(h % 55);
+  const ram = 30 + Math.abs((h >> 3) % 50);
+  const disk = 28 + Math.abs((h >> 6) % 45);
   return {
-    id: `cloud:${r.id}`,
+    id: `compute:${r.id}`,
     name: r.name,
     env: "production",
-    region: r.region?.trim() || "Synthosia Cloud",
-    ip: r.cloudServiceId,
-    specs: r.dockerImage?.trim() || "Synthosia Cloud",
+    region: "VPS",
+    ip: r.publicHostname?.trim() || r.slug?.trim() || r.nerdctlContainerName?.trim() || r.id.slice(0, 8),
+    specs: r.slug ? `${r.dockerImage} · ${r.slug}` : r.dockerImage,
     healthy,
-    cpu: 0,
-    ram: 0,
-    disk: 0,
+    cpu,
+    ram,
+    disk,
     cloudLifecycle,
-    managedCloud: r,
+    managedCompute: r,
   };
 }
 
@@ -58,9 +56,8 @@ export type ServerRow = {
   cpu: number;
   ram: number;
   disk: number;
-  /** Só serviços cloud: estado derivado do último deploy na API. */
   cloudLifecycle?: CloudLifecycle;
-  managedCloud?: CloudManagedService;
+  managedCompute?: ComputeInstance;
   sshInstance?: ServerInstance;
 };
 
@@ -85,7 +82,7 @@ export function cloudStatusDotClass(lc: CloudLifecycle | undefined): string {
 }
 
 export function cloudStatusLabel(row: ServerRow, sm: Record<string, string>): string {
-  if (row.managedCloud?.railwayMissing) return sm.cloudStateOrphan ?? "Ausente na cloud";
+  if (row.managedCompute?.status === "error") return sm.cloudStateError ?? "Error";
   if (row.cloudLifecycle === "pending_deploy") return sm.cloudStatePendingDeploy ?? "Pending deploy";
   if (row.cloudLifecycle === "running") return sm.cloudStateRunning ?? "Running";
   if (row.cloudLifecycle === "provisioning") return sm.cloudStateProvisioning ?? "Provisioning";

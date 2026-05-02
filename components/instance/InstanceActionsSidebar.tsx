@@ -11,6 +11,7 @@ export function InstanceActionsSidebar({
   lifecycle,
   railwayMissing,
   hasDeployment,
+  hideLifecycleControls,
   onDeploy,
   onRestart,
   onStop,
@@ -40,6 +41,8 @@ export function InstanceActionsSidebar({
   lifecycle: CloudLifecycle;
   railwayMissing: boolean;
   hasDeployment: boolean;
+  /** Quando true, só «Eliminar» (compute plane / jobs — sem deploy na API). */
+  hideLifecycleControls?: boolean;
   onDeploy: () => void;
   onRestart: () => void;
   onStop: () => void;
@@ -73,6 +76,8 @@ export function InstanceActionsSidebar({
           {labels.actions}
         </h2>
         <div className="mt-4 flex flex-col gap-2">
+          {!hideLifecycleControls ? (
+            <>
           <button
             type="button"
             disabled={!canManage || busy || provisioning || railwayMissing}
@@ -108,6 +113,8 @@ export function InstanceActionsSidebar({
           >
             {labels.stop}
           </button>
+            </>
+          ) : null}
           <button
             type="button"
             disabled={!canManage || busy}

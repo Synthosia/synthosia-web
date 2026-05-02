@@ -200,186 +200,85 @@ export async function listServerInstances(): Promise<ServerInstance[]> {
   return apiFetch<ServerInstance[]>("/v1/infrastructure/server-instances", { method: "GET" }, { retryAuth: true });
 }
 
-const CLOUD_SERVICES_BASE = "/v1/infrastructure/cloud-services";
+const COMPUTE_INSTANCES_BASE = "/v1/infrastructure/instances";
+const MANAGED_SERVER_INSTANCES_BASE = "/v1/infrastructure/managed-server-instances";
 
-/** Serviço gerido pela Synthosia Cloud (organização). */
-export type CloudManagedService = {
+/** Instância de workload no compute plane (VPS + agente + jobs). */
+export type ComputeInstance = {
   id: string;
-  cloudServiceId: string;
   name: string;
-  dockerImage?: string | null;
-  region?: string | null;
-  limits: unknown;
-  deploymentStatus?: string | null;
-  latestDeploymentId?: string | null;
-  /** ISO-8601: última sincronização do worker com a Railway. */
-  railwaySyncedAt?: string | null;
-  /** O recurso deixou de existir no fornecedor cloud (ex.: apagado no painel). */
-  railwayMissing?: boolean;
+  dockerImage: string;
+  memoryMb: number;
+  cpuMillicores: number;
+  traefikHosts: string[];
+  status: string;
+  nerdctlContainerName?: string | null;
+  agentId?: string | null;
+  slug?: string | null;
+  publicHostname?: string | null;
+  hostBindPort?: number | null;
+  internalContainerPort?: number;
+  cloudflareDnsRecordId?: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
-export type CloudServiceLogLine = {
-  message: string;
-  timestamp?: string | null;
+export type ComputeInstanceCreated = {
+  instance: ComputeInstance;
+  jobId: string;
 };
 
-export type CloudServiceLogs = {
-  lines: CloudServiceLogLine[];
+export type ComputeDestroyAccepted = {
+  jobId: string;
+  instanceId: string;
+  status: string;
 };
 
-export async function listCloudManagedServices(): Promise<CloudManagedService[]> {
-  return apiFetch<CloudManagedService[]>(CLOUD_SERVICES_BASE, { method: "GET" }, { retryAuth: true });
+export async function listComputeInstances(): Promise<ComputeInstance[]> {
+  return apiFetch<ComputeInstance[]>(COMPUTE_INSTANCES_BASE, { method: "GET" }, { retryAuth: true });
 }
 
-export async function createCloudManagedService(payload: {
+export async function createComputeInstance(payload: {
   name: string;
-  dockerImage?: string;
-  sourceRepo?: string;
-  branch?: string;
-}): Promise<CloudManagedService> {
-  return apiFetch<CloudManagedService>(
-    CLOUD_SERVICES_BASE,
+  dockerImage: string;
+  memoryMb?: number;
+  cpuMillicores?: number;
+  traefikHosts?: string[];
+}): Promise<ComputeInstanceCreated> {
+  return apiFetch<ComputeInstanceCreated>(
+    COMPUTE_INSTANCES_BASE,
     {
       method: "POST",
       headers: csrfHeaders(),
-      body: JSON.stringify({
-        name: payload.name,
-        dockerImage: payload.dockerImage,
-        sourceRepo: payload.sourceRepo,
-        branch: payload.branch,
-      }),
+      body: JSON.stringify(payload),
     },
     { retryAuth: true },
   );
 }
 
-export async function deleteCloudManagedService(bindingId: string): Promise<void> {
-  await apiFetch(`${CLOUD_SERVICES_BASE}/${bindingId}`, { method: "DELETE", headers: csrfHeaders() }, {
-    retryAuth: true,
-  });
-}
-
-/** Remove apenas o registo na Synthosia (não apaga infra no fornecedor). */
-export async function forgetCloudManagedServiceBinding(bindingId: string): Promise<void> {
-  await apiFetch(`${CLOUD_SERVICES_BASE}/${bindingId}/forget`, { method: "POST", headers: csrfHeaders() }, {
-    retryAuth: true,
-  });
-}
-
-export async function recreateCloudManagedService(bindingId: string): Promise<CloudManagedService> {
-  return apiFetch<CloudManagedService>(
-    `${CLOUD_SERVICES_BASE}/${bindingId}/recreate`,
-    { method: "POST", headers: csrfHeaders() },
+export async function deleteComputeInstance(instanceId: string): Promise<ComputeDestroyAccepted> {
+  return apiFetch<ComputeDestroyAccepted>(
+    `${COMPUTE_INSTANCES_BASE}/${instanceId}`,
+    { method: "DELETE", headers: csrfHeaders() },
     { retryAuth: true },
   );
 }
 
-export async function patchCloudServiceSettings(
-  bindingId: string,
-  payload: {
-    displayName?: string;
-    memoryGb?: number;
-    vcpus?: number;
-    dockerImage?: string;
-  },
-): Promise<void> {
-  await apiFetch(
-    `${CLOUD_SERVICES_BASE}/${bindingId}/settings`,
+/** VPS gerida: slug + `{slug}.{SYNTHOSIA_COMPUTE_PUBLIC_DOMAIN}` + DNS A (Cloudflare) + job para o agente. */
+export async function createManagedServerInstance(payload: {
+  label: string;
+  image: string;
+  internalPort?: number;
+  memoryMb?: number;
+  cpuMillicores?: number;
+}): Promise<ComputeInstanceCreated> {
+  return apiFetch<ComputeInstanceCreated>(
+    MANAGED_SERVER_INSTANCES_BASE,
     {
-      method: "PATCH",
+      method: "POST",
       headers: csrfHeaders(),
-      body: JSON.stringify({
-        displayName: payload.displayName,
-        memoryGb: payload.memoryGb,
-        vcpus: payload.vcpus,
-        dockerImage: payload.dockerImage,
-      }),
+      body: JSON.stringify(payload),
     },
-    { retryAuth: true },
-  );
-}
-
-/** URL absoluta do stream SSE (session cookie; usar com `EventSource` e `withCredentials: true`). */
-export function cloudManagedServiceStreamUrl(bindingId: string): string {
-  return `${API_URL}${CLOUD_SERVICES_BASE}/${bindingId}/stream`;
-}
-
-export async function updateCloudServiceLimits(
-  bindingId: string,
-  payload: { memoryGb?: number; vcpus?: number },
-): Promise<void> {
-  await apiFetch(
-    `${CLOUD_SERVICES_BASE}/${bindingId}/limits`,
-    {
-      method: "PATCH",
-      headers: csrfHeaders(),
-      body: JSON.stringify({ memoryGb: payload.memoryGb, vcpus: payload.vcpus }),
-    },
-    { retryAuth: true },
-  );
-}
-
-export async function updateCloudServiceImage(bindingId: string, dockerImage: string): Promise<void> {
-  await apiFetch(
-    `${CLOUD_SERVICES_BASE}/${bindingId}/image`,
-    {
-      method: "PATCH",
-      headers: csrfHeaders(),
-      body: JSON.stringify({ dockerImage }),
-    },
-    { retryAuth: true },
-  );
-}
-
-export type CloudMetricSeries = {
-  measurement: string;
-  points: { ts: number; value: number }[];
-};
-
-export type CloudMetricsResponse = {
-  series: CloudMetricSeries[];
-  windowHours: number;
-};
-
-export async function getCloudServiceMetrics(
-  bindingId: string,
-  hours?: number,
-): Promise<CloudMetricsResponse> {
-  const q = hours != null ? `?hours=${encodeURIComponent(String(hours))}` : "";
-  return apiFetch<CloudMetricsResponse>(`${CLOUD_SERVICES_BASE}/${bindingId}/metrics${q}`, { method: "GET" }, {
-    retryAuth: true,
-  });
-}
-
-export async function deployCloudService(bindingId: string): Promise<void> {
-  await apiFetch(`${CLOUD_SERVICES_BASE}/${bindingId}/deploy`, { method: "POST", headers: csrfHeaders() }, {
-    retryAuth: true,
-  });
-}
-
-export async function restartCloudService(bindingId: string): Promise<void> {
-  await apiFetch(`${CLOUD_SERVICES_BASE}/${bindingId}/restart`, { method: "POST", headers: csrfHeaders() }, {
-    retryAuth: true,
-  });
-}
-
-export async function stopCloudService(bindingId: string): Promise<void> {
-  await apiFetch(`${CLOUD_SERVICES_BASE}/${bindingId}/stop`, { method: "POST", headers: csrfHeaders() }, {
-    retryAuth: true,
-  });
-}
-
-export async function getCloudServiceLogs(
-  bindingId: string,
-  kind: "build" | "runtime",
-  limit?: number,
-): Promise<CloudServiceLogs> {
-  const params = new URLSearchParams();
-  params.set("kind", kind);
-  if (limit != null) params.set("limit", String(limit));
-  return apiFetch<CloudServiceLogs>(
-    `${CLOUD_SERVICES_BASE}/${bindingId}/logs?${params.toString()}`,
-    { method: "GET" },
     { retryAuth: true },
   );
 }

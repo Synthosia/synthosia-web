@@ -9,24 +9,17 @@ import { ServerPanelModals } from "@/components/server-panel-modals";
 import {
   cloudStatusDotClass,
   cloudStatusLabel,
-  mapCloudManagedToRow,
+  mapComputeInstanceToRow,
   type ServerRow,
 } from "@/components/server-row-types";
 import {
   ApiClientError,
-  type CloudMetricsResponse,
   type ConsoleDashboard,
-  type CloudManagedService,
+  type ComputeInstance,
   type ServerInstance,
-  deleteCloudManagedService,
-  deployCloudService,
-  forgetCloudManagedServiceBinding,
-  getCloudServiceMetrics,
-  listCloudManagedServices,
+  deleteComputeInstance,
+  listComputeInstances,
   listServerInstances,
-  recreateCloudManagedService,
-  restartCloudService,
-  stopCloudService,
 } from "@/lib/synthosia-api";
 
 function stableMetricsFromId(id: string): Pick<ServerRow, "cpu" | "ram" | "disk"> {
@@ -38,18 +31,6 @@ function stableMetricsFromId(id: string): Pick<ServerRow, "cpu" | "ram" | "disk"
   const ram = 30 + Math.abs((h >> 3) % 50);
   const disk = 28 + Math.abs((h >> 6) % 45);
   return { cpu, ram, disk };
-}
-
-/** Mantém CPU/RAM/disco calculados pela API ao refrescar a lista (polling não repõe a 0). */
-function mergePreservedCloudMetrics(prev: ServerRow[], mapped: ServerRow[]): ServerRow[] {
-  const byId = new Map(prev.map((r) => [r.id, r]));
-  return mapped.map((row) => {
-    const old = byId.get(row.id);
-    if (!row.managedCloud || !old?.managedCloud || old.managedCloud.id !== row.managedCloud.id) {
-      return row;
-    }
-    return { ...row, cpu: old.cpu, ram: old.ram, disk: old.disk };
-  });
 }
 
 function mapInstanceToRow(inst: ServerInstance): ServerRow {
@@ -72,97 +53,6 @@ function mapInstanceToRow(inst: ServerInstance): ServerRow {
     disk,
     sshInstance: inst,
   };
-}
-
-function cloudResponseToChartSeries(res: CloudMetricsResponse): {
-  cpu: number[];
-  mem: number[];
-  netMbps: number[];
-} {
-  let cpu: number[] = [];
-  let mem: number[] = [];
-  let netMbps: number[] = [];
-  for (const series of res.series) {
-    const u = series.measurement.toUpperCase();
-    const vals = series.points.map((p) => p.value);
-    if (u.includes("CPU")) {
-      cpu = vals.map((v) => Math.round(Math.min(100, v <= 1 && v >= 0 ? v * 100 : v)));
-    } else if (u.includes("MEMORY")) {
-      mem = vals.map((v) => Math.round(Math.min(100, v <= 100 ? v : (v / 8) * 100)));
-    } else if (u.includes("NETWORK") || u.includes("EGRESS") || u.includes("TRAFFIC")) {
-      netMbps = vals;
-    }
-  }
-  if (netMbps.length === 0 && cpu.length > 0) {
-    netMbps = cpu.map((c) => Math.max(0, (c / 100) * 3));
-  }
-  return { cpu, mem, netMbps };
-}
-
-/** Comprimento mínimo comum com pelo menos 2 pontos (para séries temporais). */
-function minSeriesLenAtLeast2(series: number[][]): number {
-  const lens = series.map((s) => s.length).filter((l) => l >= 2);
-  if (lens.length === 0) return 0;
-  return Math.min(...lens);
-}
-
-function mergeAverageByIndex(series: number[][], len: number): number[] {
-  const out: number[] = [];
-  for (let i = 0; i < len; i++) {
-    let sum = 0;
-    let c = 0;
-    for (const s of series) {
-      if (i < s.length) {
-        sum += s[i]!;
-        c++;
-      }
-    }
-    out.push(c ? Math.round(sum / c) : 0);
-  }
-  return out;
-}
-
-function mergeSumByIndex(series: number[][], len: number): number[] {
-  const out: number[] = [];
-  for (let i = 0; i < len; i++) {
-    let sum = 0;
-    for (const s of series) {
-      if (i < s.length) sum += s[i]!;
-    }
-    out.push(Math.round(sum * 100) / 100);
-  }
-  return out;
-}
-
-/**
- * Agrega métricas de várias instâncias cloud: CPU e memória em média por instante;
- * rede em soma (tráfego agregado). Séries alinhadas ao menor comprimento comum entre CPU e mem.
- */
-function aggregateFleetChartSeries(
-  perService: { cpu: number[]; mem: number[]; netMbps: number[] }[],
-): { cpu: number[]; mem: number[]; netMbps: number[] } | null {
-  if (perService.length === 0) return null;
-  const cpuLen = minSeriesLenAtLeast2(perService.map((s) => s.cpu));
-  const memLen = minSeriesLenAtLeast2(perService.map((s) => s.mem));
-  if (cpuLen < 2 || memLen < 2) return null;
-  const n = Math.min(cpuLen, memLen);
-  const cpu = mergeAverageByIndex(
-    perService.map((s) => s.cpu),
-    n,
-  );
-  const mem = mergeAverageByIndex(
-    perService.map((s) => s.mem),
-    n,
-  );
-  const netLen = minSeriesLenAtLeast2(perService.map((s) => s.netMbps));
-  const netMbps =
-    netLen >= 2
-      ? mergeSumByIndex(
-          perService.map((s) => s.netMbps),
-          Math.min(n, netLen),
-        )
-      : cpu.map((c) => Math.max(0, (c / 100) * 3));
-  return { cpu, mem, netMbps };
 }
 
 function barTone(pct: number): string {
@@ -280,11 +170,11 @@ export function ServerMonitoringDashboard({
   const [selectedId, setSelectedId] = useState("");
   const [modalKind, setModalKind] = useState<"new" | null>(null);
 
-  /** Assinatura das instâncias cloud elegíveis (métricas agregadas + por linha). */
-  const cloudMetricsSignature = useMemo(() => {
+  /** Assinatura das instâncias compute (para refrescar gráficos placeholder). */
+  const computeMetricsSignature = useMemo(() => {
     return servers
-      .filter((s) => s.managedCloud?.id && !s.managedCloud.railwayMissing)
-      .map((s) => `${s.managedCloud!.id}:${s.managedCloud!.deploymentStatus ?? ""}`)
+      .filter((s) => s.managedCompute?.id)
+      .map((s) => `${s.managedCompute!.id}:${s.managedCompute!.status}`)
       .sort()
       .join("|");
   }, [servers]);
@@ -312,10 +202,7 @@ export function ServerMonitoringDashboard({
   const cpuPct = Math.round(cpuSeries[cpuSeries.length - 1] ?? 0);
   const memPct = Math.round(memSeries[memSeries.length - 1] ?? 0);
   const netLast = netSeries[netSeries.length - 1] ?? 0;
-  const fleetCloudCount = useMemo(
-    () => servers.filter((s) => s.managedCloud?.id && !s.managedCloud.railwayMissing).length,
-    [servers],
-  );
+  const fleetCloudCount = useMemo(() => servers.filter((s) => s.managedCompute?.id).length, [servers]);
   const netCapMbps = 5 * Math.max(1, cloudFleetChartCount > 0 ? cloudFleetChartCount : fleetCloudCount);
   const netScaled = Math.min(100, Math.round((netLast / netCapMbps) * 100));
 
@@ -338,10 +225,10 @@ export function ServerMonitoringDashboard({
     try {
       const [ssh, rw] = await Promise.all([
         listServerInstances().catch(() => [] as ServerInstance[]),
-        listCloudManagedServices().catch(() => [] as CloudManagedService[]),
+        listComputeInstances().catch(() => [] as ComputeInstance[]),
       ]);
-        const mapped = [...ssh.map(mapInstanceToRow), ...rw.map(mapCloudManagedToRow)];
-      setServers((prev) => mergePreservedCloudMetrics(prev, mapped));
+      const mapped = [...ssh.map(mapInstanceToRow), ...rw.map(mapComputeInstanceToRow)];
+      setServers(mapped);
       setServersLoad("ok");
       setSelectedId((prev) => {
         if (prev && mapped.some((s) => s.id === prev)) return prev;
@@ -357,7 +244,7 @@ export function ServerMonitoringDashboard({
     void refreshServers();
   }, [refreshServers]);
 
-  /** Sincroniza estado de deploy e linhas cloud com a Railway sem depender só do carregamento inicial. */
+  /** Sincroniza lista SSH + instâncias compute. */
   useEffect(() => {
     let cancelled = false;
     const intervalMs = 8000;
@@ -367,11 +254,11 @@ export function ServerMonitoringDashboard({
       try {
         const [ssh, rw] = await Promise.all([
           listServerInstances().catch(() => [] as ServerInstance[]),
-          listCloudManagedServices().catch(() => [] as CloudManagedService[]),
+          listComputeInstances().catch(() => [] as ComputeInstance[]),
         ]);
         if (cancelled) return;
-        const mapped = [...ssh.map(mapInstanceToRow), ...rw.map(mapCloudManagedToRow)];
-        setServers((prev) => mergePreservedCloudMetrics(prev, mapped));
+        const mapped = [...ssh.map(mapInstanceToRow), ...rw.map(mapComputeInstanceToRow)];
+        setServers(mapped);
         setSelectedId((prev) =>
           prev && mapped.some((s) => s.id === prev) ? prev : (mapped[0]?.id ?? ""),
         );
@@ -390,69 +277,32 @@ export function ServerMonitoringDashboard({
     };
   }, []);
 
-  /** Métricas 24h: série agregada no topo + último ponto por linha (todas as cloud com API). */
+  /** Séries placeholder a partir das instâncias compute (métricas reais virão dos agentes). */
   useEffect(() => {
     if (serversLoad !== "ok") return;
-    const targets = servers.filter((s) => s.managedCloud?.id);
+    const targets = servers.filter((s) => s.managedCompute?.id);
     if (targets.length === 0) {
       setCloudChartSeries(null);
       setCloudFleetChartCount(0);
       return;
     }
-    let cancelled = false;
-    const CHART_HOURS = 24;
-
-    void (async () => {
-      const results = await Promise.all(
-        targets.map(async (s) => {
-          const bindingId = s.managedCloud!.id;
-          try {
-            const metrics = await getCloudServiceMetrics(bindingId, CHART_HOURS);
-            const series = cloudResponseToChartSeries(metrics);
-            let cpu = s.cpu;
-            let ram = s.ram;
-            let disk = s.disk;
-            for (const ms of metrics.series) {
-              const last = ms.points[ms.points.length - 1];
-              if (!last) continue;
-              if (ms.measurement.toUpperCase().includes("CPU")) {
-                const v = last.value;
-                cpu = Math.round(Math.min(100, v <= 1 && v >= 0 ? v * 100 : v));
-              }
-              if (ms.measurement.toUpperCase().includes("MEMORY")) {
-                const v = last.value;
-                ram = Math.round(Math.min(100, v <= 100 ? v : (v / 8) * 100));
-              }
-            }
-            disk = Math.min(100, Math.round((cpu + ram) / 2));
-            return { rowId: s.id, bindingId, series, row: { cpu, ram, disk }, ok: true as const };
-          } catch {
-            return { rowId: s.id, bindingId, series: null, row: null, ok: false as const };
-          }
-        }),
-      );
-
-      if (cancelled) return;
-
-      const forAgg = results
-        .filter((r) => r.ok && r.series && r.series.cpu.length >= 2 && r.series.mem.length >= 2)
-        .map((r) => r.series!);
-      const agg = aggregateFleetChartSeries(forAgg);
-      setCloudChartSeries(agg);
-      setCloudFleetChartCount(forAgg.length);
-
-      setServers((prev) =>
-        prev.map((row) => {
-          const u = results.find((x) => x.rowId === row.id && x.ok && x.row);
-          return u && u.row ? { ...row, cpu: u.row.cpu, ram: u.row.ram, disk: u.row.disk } : row;
-        }),
-      );
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [serversLoad, cloudMetricsSignature]);
+    const n = 24;
+    const avgCpu = Math.round(
+      targets.reduce((acc, s) => acc + s.cpu, 0) / Math.max(1, targets.length),
+    );
+    const avgRam = Math.round(
+      targets.reduce((acc, s) => acc + s.ram, 0) / Math.max(1, targets.length),
+    );
+    const cpu = Array.from({ length: n }, (_, i) =>
+      Math.min(100, Math.round(avgCpu * (0.9 + 0.1 * Math.sin(i / 3)))),
+    );
+    const mem = Array.from({ length: n }, (_, i) =>
+      Math.min(100, Math.round(avgRam * (0.92 + 0.08 * Math.cos(i / 4)))),
+    );
+    const netMbps = cpu.map((c) => Math.max(0, (c / 100) * 3));
+    setCloudChartSeries({ cpu, mem, netMbps });
+    setCloudFleetChartCount(targets.length);
+  }, [serversLoad, computeMetricsSignature]);
 
   const selectSshServer = useCallback(
     (id: string) => {
@@ -464,93 +314,19 @@ export function ServerMonitoringDashboard({
 
   useEffect(() => {
     if (serversLoad !== "ok" || !cloudBindingId) return;
-    const row = servers.find((s) => s.managedCloud?.id === cloudBindingId);
+    const row = servers.find((s) => s.managedCompute?.id === cloudBindingId);
     if (row) setSelectedId(row.id);
   }, [cloudBindingId, serversLoad, servers]);
 
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
 
-  const runDeployBinding = useCallback(
-    async (bindingId: string) => {
-      if (!canManage || !bindingId) return;
-      setLifecycleBusy(true);
-      try {
-        await deployCloudService(bindingId);
-        await refreshServers();
-      } finally {
-        setLifecycleBusy(false);
-      }
-    },
-    [canManage, refreshServers],
-  );
-
-  const runRestartBinding = useCallback(
-    async (bindingId: string) => {
-      if (!canManage || !bindingId) return;
-      setLifecycleBusy(true);
-      try {
-        await restartCloudService(bindingId);
-        await refreshServers();
-      } finally {
-        setLifecycleBusy(false);
-      }
-    },
-    [canManage, refreshServers],
-  );
-
-  const runStopBinding = useCallback(
-    async (bindingId: string) => {
-      if (!canManage || !bindingId) return;
-      setLifecycleBusy(true);
-      try {
-        await stopCloudService(bindingId);
-        await refreshServers();
-      } finally {
-        setLifecycleBusy(false);
-      }
-    },
-    [canManage, refreshServers],
-  );
-
   const runDeleteBinding = useCallback(
     async (bindingId: string) => {
       if (!canManage || !bindingId) return;
-      if (!window.confirm(smRecord.deleteConfirm ?? "Delete this service?")) return;
+      if (!window.confirm(smRecord.deleteConfirm ?? "Remover esta instância?")) return;
       setLifecycleBusy(true);
       try {
-        await deleteCloudManagedService(bindingId);
-        if (cloudBindingId === bindingId) onNavigateCloud(null);
-        await refreshServers();
-      } finally {
-        setLifecycleBusy(false);
-      }
-    },
-    [canManage, cloudBindingId, onNavigateCloud, refreshServers, smRecord.deleteConfirm],
-  );
-
-  const runRecreateBinding = useCallback(
-    async (bindingId: string) => {
-      if (!canManage || !bindingId) return;
-      setLifecycleBusy(true);
-      try {
-        await recreateCloudManagedService(bindingId);
-        await refreshServers();
-      } catch (e) {
-        window.alert(e instanceof ApiClientError ? e.message : (smRecord.modalError ?? "Erro"));
-      } finally {
-        setLifecycleBusy(false);
-      }
-    },
-    [canManage, refreshServers, smRecord.modalError],
-  );
-
-  const runForgetForBinding = useCallback(
-    async (bindingId: string) => {
-      if (!canManage || !bindingId) return;
-      if (!window.confirm(smRecord.forgetConfirm ?? "Remover só o registo local?")) return;
-      setLifecycleBusy(true);
-      try {
-        await forgetCloudManagedServiceBinding(bindingId);
+        await deleteComputeInstance(bindingId);
         if (cloudBindingId === bindingId) onNavigateCloud(null);
         await refreshServers();
       } catch (e) {
@@ -559,7 +335,7 @@ export function ServerMonitoringDashboard({
         setLifecycleBusy(false);
       }
     },
-    [canManage, cloudBindingId, onNavigateCloud, refreshServers, smRecord.forgetConfirm, smRecord.modalError],
+    [canManage, cloudBindingId, onNavigateCloud, refreshServers, smRecord.deleteConfirm, smRecord.modalError],
   );
 
   const cloudCardActions = useMemo(
@@ -567,32 +343,11 @@ export function ServerMonitoringDashboard({
       canManage,
       busy: lifecycleBusy,
       labels: {
-        deploy: sm.actionDeploy,
-        restart: sm.actionRestart,
-        stop: sm.actionStop,
         delete: sm.actionDelete,
       },
-      onDeploy: runDeployBinding,
-      onRestart: runRestartBinding,
-      onStop: runStopBinding,
       onDelete: runDeleteBinding,
-      onRecreateOrphan: runRecreateBinding,
-      onForgetOrphan: runForgetForBinding,
     }),
-    [
-      canManage,
-      lifecycleBusy,
-      sm.actionDelete,
-      sm.actionDeploy,
-      sm.actionRestart,
-      sm.actionStop,
-      runDeleteBinding,
-      runDeployBinding,
-      runForgetForBinding,
-      runRecreateBinding,
-      runRestartBinding,
-      runStopBinding,
-    ],
+    [canManage, lifecycleBusy, sm.actionDelete, runDeleteBinding],
   );
 
   const prod = useMemo(() => servers.filter((s) => s.env === "production"), [servers]);
@@ -822,13 +577,8 @@ function MetricCard({
 type CloudCardActionsBundle = {
   canManage: boolean;
   busy: boolean;
-  labels: { deploy: string; restart: string; stop: string; delete: string };
-  onDeploy: (bindingId: string) => void | Promise<void>;
-  onRestart: (bindingId: string) => void | Promise<void>;
-  onStop: (bindingId: string) => void | Promise<void>;
+  labels: { delete: string };
   onDelete: (bindingId: string) => void | Promise<void>;
-  onRecreateOrphan: (bindingId: string) => void | Promise<void>;
-  onForgetOrphan: (bindingId: string) => void | Promise<void>;
 };
 
 function ServerGroup({
@@ -875,8 +625,8 @@ function ServerGroup({
       </div>
       <ul className="space-y-2">
         {servers.map((s) => {
-          const rowActive = s.managedCloud
-            ? urlCloudBindingId === s.managedCloud.id
+          const rowActive = s.managedCompute
+            ? urlCloudBindingId === s.managedCompute.id
             : selectedId === s.id;
           return (
           <li key={s.id}>
@@ -891,7 +641,7 @@ function ServerGroup({
               <button
                 type="button"
                 onClick={() =>
-                  s.managedCloud ? onOpenCloudDetail(s.managedCloud.id) : onSelectSsh(s.id)
+                  s.managedCompute ? onOpenCloudDetail(s.managedCompute.id) : onSelectSsh(s.id)
                 }
                 className="flex min-w-0 flex-1 items-start gap-3 text-left"
               >
@@ -924,7 +674,7 @@ function ServerGroup({
                   </p>
                 </div>
               </button>
-              {s.managedCloud ? (
+              {s.managedCompute ? (
                 <div className="flex w-full min-w-0 flex-col gap-2 sm:w-56">
                   <p className="text-[10px] text-gray-400 sm:text-right">{cloudCardHint}</p>
                   <div className="flex flex-col gap-1 border-t border-gray-100 pt-2">
@@ -937,78 +687,13 @@ function ServerGroup({
                   >
                     <button
                       type="button"
-                      disabled={
-                        !cloudActions.canManage ||
-                        cloudActions.busy ||
-                        s.cloudLifecycle === "provisioning" ||
-                        !!s.managedCloud.railwayMissing
-                      }
-                      onClick={() => void cloudActions.onDeploy(s.managedCloud!.id)}
-                      className="rounded-md border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] font-medium text-cyan-900 shadow-sm transition hover:bg-cyan-100 disabled:opacity-50"
-                    >
-                      {cloudActions.labels.deploy}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={
-                        !cloudActions.canManage ||
-                        cloudActions.busy ||
-                        !!s.managedCloud.railwayMissing ||
-                        !s.managedCloud.latestDeploymentId ||
-                        s.cloudLifecycle === "pending_deploy" ||
-                        s.cloudLifecycle === "provisioning"
-                      }
-                      onClick={() => void cloudActions.onRestart(s.managedCloud!.id)}
-                      className="rounded-md border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium text-gray-800 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      {cloudActions.labels.restart}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={
-                        !cloudActions.canManage ||
-                        cloudActions.busy ||
-                        !!s.managedCloud.railwayMissing ||
-                        s.cloudLifecycle !== "running"
-                      }
-                      onClick={() => void cloudActions.onStop(s.managedCloud!.id)}
-                      className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-950 shadow-sm transition hover:bg-amber-100 disabled:opacity-50"
-                    >
-                      {cloudActions.labels.stop}
-                    </button>
-                    <button
-                      type="button"
                       disabled={!cloudActions.canManage || cloudActions.busy}
-                      onClick={() => void cloudActions.onDelete(s.managedCloud!.id)}
+                      onClick={() => void cloudActions.onDelete(s.managedCompute!.id)}
                       className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[11px] font-medium text-red-900 shadow-sm transition hover:bg-red-100 disabled:opacity-50"
                     >
                       {cloudActions.labels.delete}
                     </button>
                   </div>
-                  {s.managedCloud.railwayMissing ? (
-                    <div className="rounded-md border border-amber-200 bg-amber-50/90 px-2 py-2 text-[11px] text-amber-950">
-                      <p className="font-semibold">{statusLocale.orphanBannerTitle}</p>
-                      <p className="mt-1 leading-snug text-amber-950/90">{statusLocale.orphanBannerBody}</p>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        <button
-                          type="button"
-                          disabled={!cloudActions.canManage || cloudActions.busy}
-                          onClick={() => void cloudActions.onRecreateOrphan(s.managedCloud!.id)}
-                          className="rounded-md border border-cyan-600/30 bg-cyan-50 px-2 py-1 text-[11px] font-medium text-cyan-950 hover:bg-cyan-100 disabled:opacity-50"
-                        >
-                          {statusLocale.actionRecreate}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={!cloudActions.canManage || cloudActions.busy}
-                          onClick={() => void cloudActions.onForgetOrphan(s.managedCloud!.id)}
-                          className="rounded-md border border-gray-300 bg-white px-2 py-1 text-[11px] font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50"
-                        >
-                          {statusLocale.actionForgetBinding}
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
                 </div>
               ) : (
                 <div className="flex w-full shrink-0 flex-col justify-center gap-1.5 sm:w-52">
