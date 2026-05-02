@@ -24,13 +24,10 @@ export function mapComputeLifecycleFromStatus(status: string | null | undefined)
 export function mapComputeInstanceToRow(r: ComputeInstance): ServerRow {
   const cloudLifecycle = mapComputeLifecycleFromStatus(r.status);
   const healthy = r.status === "running";
-  let h = 0;
-  for (let i = 0; i < r.id.length; i++) {
-    h = Math.imul(31, h) + r.id.charCodeAt(i);
-  }
-  const cpu = 25 + Math.abs(h % 55);
-  const ram = 30 + Math.abs((h >> 3) % 50);
-  const disk = 28 + Math.abs((h >> 6) % 45);
+  /** Mini barras na lista usam métricas reais via API; aqui não geramos valores fictícios a partir do id. */
+  const cpu = 0;
+  const ram = 0;
+  const disk = 0;
   return {
     id: `compute:${r.id}`,
     name: r.name,

@@ -118,7 +118,16 @@ function AreaMetricChart({
   );
 }
 
-function MiniProgress({ value, label }: { value: number; label: string }) {
+function MiniProgress({ value, label }: { value: number | null; label: string }) {
+  if (value === null) {
+    return (
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="w-7 shrink-0 text-[10px] font-medium text-gray-400">{label}</span>
+        <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-100" />
+        <span className="w-8 shrink-0 text-right text-[10px] tabular-nums text-gray-400">—</span>
+      </div>
+    );
+  }
   const tone = barTone(value);
   return (
     <div className="flex min-w-0 items-center gap-2">
@@ -678,8 +687,8 @@ function ServerGroup({
                 <div className="flex w-full min-w-0 flex-col gap-2 sm:w-56">
                   <p className="text-[10px] text-gray-400 sm:text-right">{cloudCardHint}</p>
                   <div className="flex flex-col gap-1 border-t border-gray-100 pt-2">
-                    <MiniProgress value={s.cpu} label={miniCpu} />
-                    <MiniProgress value={s.ram} label={miniRam} />
+                    <MiniProgress value={null} label={miniCpu} />
+                    <MiniProgress value={null} label={miniRam} />
                   </div>
                   <div
                     className="flex flex-wrap gap-1.5 border-t border-gray-100 pt-2 sm:justify-end"
