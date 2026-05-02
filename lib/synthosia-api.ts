@@ -203,6 +203,14 @@ export async function listServerInstances(): Promise<ServerInstance[]> {
 const COMPUTE_INSTANCES_BASE = "/v1/infrastructure/instances";
 const MANAGED_SERVER_INSTANCES_BASE = "/v1/infrastructure/managed-server-instances";
 
+/**
+ * URL absoluta do SSE da consola cloud (snapshot + logs) para uma instância compute.
+ * O `bindingId` na UI corresponde ao `id` de `ComputeInstance`.
+ */
+export function cloudManagedServiceStreamUrl(computeInstanceId: string): string {
+  return `${API_URL}${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(computeInstanceId)}/stream`;
+}
+
 /** Instância de workload no compute plane (VPS + agente + jobs). */
 export type ComputeInstance = {
   id: string;

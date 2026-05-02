@@ -1,7 +1,9 @@
 import { limitsProvisionedNumeric } from "@/lib/cloud-service-limits";
 
-type MetricSeriesResponse = {
+export type MetricSeriesResponse = {
   series: { measurement: string; points: { ts: number; value: number }[] }[];
+  /** Janela agregada em horas (quando a API enviar). */
+  windowHours?: number;
 };
 
 /** Extrai séries normalizadas para sparklines e gráficos (última janela da API). */
