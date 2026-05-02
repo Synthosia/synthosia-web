@@ -386,6 +386,7 @@ function NewServerModal({
   const [githubLoading, setGithubLoading] = useState(false);
   const [githubTried, setGithubTried] = useState(false);
   const [githubError, setGithubError] = useState(false);
+  const [githubErrorDetail, setGithubErrorDetail] = useState<string | null>(null);
   const [dockerResults, setDockerResults] = useState<{ name: string; description: string }[]>([]);
   const [dockerSearchBusy, setDockerSearchBusy] = useState(false);
   const [dockerListOpen, setDockerListOpen] = useState(false);
@@ -506,17 +507,21 @@ function NewServerModal({
     setGithubTried(true);
     setGithubRepos(null);
     setGithubError(false);
+    setGithubErrorDetail(null);
     listGithubRepositories()
       .then((repos) => {
         if (!cancelled) {
           setGithubRepos(repos);
           setGithubError(false);
+          setGithubErrorDetail(null);
         }
       })
-      .catch(() => {
+      .catch((e: unknown) => {
         if (!cancelled) {
           setGithubRepos([]);
           setGithubError(true);
+          const msg = e instanceof Error ? e.message : null;
+          setGithubErrorDetail(msg && msg.length > 280 ? `${msg.slice(0, 277)}…` : msg);
         }
       })
       .finally(() => {
@@ -795,7 +800,9 @@ function NewServerModal({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {session?.authProvider === "github" || session?.integrations?.includes("ext-github") ? (
+                  {session?.authProvider === "github" ||
+                  session?.integrations?.includes("ext-github") ||
+                  session?.integrations?.includes("GitHub") ? (
                     <p className="text-[10px] font-medium text-cyan-900/90">{t.modalGithubLinkedHint!}</p>
                   ) : null}
                   <div>
@@ -805,7 +812,12 @@ function NewServerModal({
                     {githubLoading ? (
                       <p className="mt-2 text-xs text-gray-500">{t.modalGithubLoading!}</p>
                     ) : githubError ? (
-                      <p className="mt-2 text-xs text-amber-800/90">{t.modalGithubUnavailable!}</p>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs text-amber-800/90">{t.modalGithubUnavailable!}</p>
+                        {githubErrorDetail ? (
+                          <p className="font-mono text-[10px] leading-snug text-amber-900/80">{githubErrorDetail}</p>
+                        ) : null}
+                      </div>
                     ) : githubTried && githubRepos && githubRepos.length === 0 ? (
                       <p className="mt-2 text-xs text-gray-600">{t.modalGithubEmpty!}</p>
                     ) : (

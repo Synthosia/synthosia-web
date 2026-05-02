@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Container } from "@/components/container";
 import { exchangeGithubOAuth } from "@/lib/synthosia-api";
+import { notifyAccountSessionChanged } from "@/lib/account-session";
 
 export function GitHubCallbackClient({ code, state }: { code?: string; state?: string }) {
   const router = useRouter();
@@ -16,7 +17,12 @@ export function GitHubCallbackClient({ code, state }: { code?: string; state?: s
     }
 
     exchangeGithubOAuth({ code, state })
-      .then(() => router.replace("/account"))
+      .then(() => {
+        router.replace("/account");
+        // O evento dentro de `exchangeGithubOAuth` pode disparar antes do painel Conta montar — repetir após navegação.
+        queueMicrotask(() => notifyAccountSessionChanged());
+        window.setTimeout(() => notifyAccountSessionChanged(), 150);
+      })
       .catch((error) => setMessage(error instanceof Error ? error.message : "GitHub OAuth failed."));
   }, [code, router, state]);
 
