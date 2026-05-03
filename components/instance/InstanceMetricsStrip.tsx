@@ -84,11 +84,11 @@ export function InstanceMetricsStrip({
   const lim = parseLimits(null);
 
   const cpuVal =
-    cpuPct.length >= 2 ? `${lastOrZero(cpuPct)}` : loading ? "…" : "—";
+    cpuPct.length >= 1 ? `${lastOrZero(cpuPct)}` : loading ? "…" : "—";
   const memVal =
-    memPct.length >= 2 ? `${lastOrZero(memPct)}` : loading ? "…" : "—";
+    memPct.length >= 1 ? `${lastOrZero(memPct)}` : loading ? "…" : "—";
   const netLast = netMbps.length ? netMbps[netMbps.length - 1]! : 0;
-  const netVal = netMbps.length >= 2 ? `${netLast.toFixed(2)}` : loading ? "…" : "—";
+  const netVal = netMbps.length >= 1 ? `${netLast.toFixed(2)}` : loading ? "…" : "—";
 
   const diskPrimary = `${service.memoryMb} MB / ${service.cpuMillicores} mCPU`;
   const diskSecondary = labels.diskHint;
@@ -100,7 +100,7 @@ export function InstanceMetricsStrip({
         hint={labels.cpuHint}
         value={cpuVal}
         unit="%"
-        spark={cpuPct.length >= 2 ? cpuPct : loading ? [] : [0, 0]}
+        spark={cpuPct.length >= 1 ? cpuPct : loading ? [] : [0, 0]}
         stroke="#1a73e8"
         delay={0}
       />
@@ -109,7 +109,7 @@ export function InstanceMetricsStrip({
         hint={labels.memoryHint}
         value={memVal}
         unit="%"
-        spark={memPct.length >= 2 ? memPct : loading ? [] : [0, 0]}
+        spark={memPct.length >= 1 ? memPct : loading ? [] : [0, 0]}
         stroke="#16a34a"
         delay={0.04}
       />
@@ -117,9 +117,9 @@ export function InstanceMetricsStrip({
         title={labels.network}
         hint={labels.networkHint}
         value={netVal}
-        unit={netMbps.length >= 2 ? "Mb/s" : ""}
+        unit={netMbps.length >= 1 ? "Mb/s" : ""}
         spark={
-          netMbps.length >= 2
+          netMbps.length >= 1
             ? netMbps.map((v) => Math.min(100, (v / 5) * 100))
             : loading
               ? []

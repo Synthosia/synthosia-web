@@ -188,24 +188,26 @@ export function ServerMonitoringDashboard({
       .join("|");
   }, [servers]);
 
-  const cpuSeries =
-    cloudChartSeries && cloudChartSeries.cpu.length >= 2
+  /** Séries do `/v1/console/dashboard` (BD); placeholders só se a API ainda não tiver janela útil. */
+  const apiCpuOk = (m?.cpuPercentSeries?.length ?? 0) >= 2;
+  const apiMemOk = (m?.memoryPercentSeries?.length ?? 0) >= 2;
+  const apiNetOk = (m?.networkMbpsSeries?.length ?? 0) >= 2;
+
+  const cpuSeries = apiCpuOk
+    ? m!.cpuPercentSeries
+    : cloudChartSeries && cloudChartSeries.cpu.length >= 2
       ? cloudChartSeries.cpu
-      : m?.cpuPercentSeries?.length && m.cpuPercentSeries.some((v) => v > 0)
-        ? m.cpuPercentSeries
-        : zeros;
-  const memSeries =
-    cloudChartSeries && cloudChartSeries.mem.length >= 2
+      : zeros;
+  const memSeries = apiMemOk
+    ? m!.memoryPercentSeries
+    : cloudChartSeries && cloudChartSeries.mem.length >= 2
       ? cloudChartSeries.mem
-      : m?.memoryPercentSeries?.length && m.memoryPercentSeries.some((v) => v > 0)
-        ? m.memoryPercentSeries
-        : zeros;
-  const netRaw =
-    cloudChartSeries && cloudChartSeries.netMbps.length >= 2
+      : zeros;
+  const netRaw = apiNetOk
+    ? m!.networkMbpsSeries
+    : cloudChartSeries && cloudChartSeries.netMbps.length >= 2
       ? cloudChartSeries.netMbps
-      : m?.networkMbpsSeries?.length && m.networkMbpsSeries.some((v) => v > 0)
-        ? m.networkMbpsSeries
-        : null;
+      : null;
   const netSeries = netRaw ?? cpuSeries.map((c) => Math.max(0, (c / 100) * 3));
 
   const cpuPct = Math.round(cpuSeries[cpuSeries.length - 1] ?? 0);

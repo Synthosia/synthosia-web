@@ -117,7 +117,7 @@ export function InstanceMonitoringCharts({
   const { cpuPct, memPct, netMbps } = useMemo(() => extractMetricSeries(data), [data]);
 
   const netDisplay = useMemo(() => {
-    if (netMbps.length < 2) return { series: [] as number[], label: "—" };
+    if (netMbps.length < 1) return { series: [] as number[], label: "—" };
     const scaled = netMbps.map((v) => Math.min(100, (v / 5) * 100));
     const v = netMbps[netMbps.length - 1] ?? 0;
     return { series: scaled, label: `${v.toFixed(2)} Mb/s` };
@@ -166,27 +166,27 @@ export function InstanceMonitoringCharts({
         <LargeChart
           title={labels.cpu}
           subtitle={labels.cpuHint}
-          values={cpuPct.length >= 2 ? cpuPct : []}
+          values={cpuPct.length >= 1 ? cpuPct : []}
           stroke="#1a73e8"
           grad="#1a73e8"
           pctLabel={
-            cpuPct.length >= 2 ? `${Math.round(cpuPct[cpuPct.length - 1]!)}%` : loading ? "…" : "—"
+            cpuPct.length >= 1 ? `${Math.round(cpuPct[cpuPct.length - 1]!)}%` : loading ? "…" : "—"
           }
         />
         <LargeChart
           title={labels.memory}
           subtitle={labels.memoryHint}
-          values={memPct.length >= 2 ? memPct : []}
+          values={memPct.length >= 1 ? memPct : []}
           stroke="#16a34a"
           grad="#22c55e"
           pctLabel={
-            memPct.length >= 2 ? `${Math.round(memPct[memPct.length - 1]!)}%` : loading ? "…" : "—"
+            memPct.length >= 1 ? `${Math.round(memPct[memPct.length - 1]!)}%` : loading ? "…" : "—"
           }
         />
         <LargeChart
           title={labels.network}
           subtitle={labels.networkHint}
-          values={netDisplay.series}
+          values={netDisplay.series.length >= 1 ? netDisplay.series : []}
           stroke="#7c3aed"
           grad="#a855f7"
           pctLabel={netDisplay.label}
