@@ -229,7 +229,7 @@ export const COMPUTE_INSTANCE_STATUSES = [
 export type ComputeInstanceStatus = (typeof COMPUTE_INSTANCE_STATUSES)[number];
 
 /** Após normalização na fronteira HTTP: só valores do CHECK da API ou `unknown` explícito (drift visível). */
-export type ComputeInstanceStatusNormalized = ComputeInstanceStatus | "unknown";
+export type ComputeInstanceStatusNormalized = ComputeInstanceStatus | "deleted" | "unknown";
 
 /** Estados em `compute_jobs.status` quando expostos em payloads de jobs. */
 export const COMPUTE_JOB_STATUSES = ["pending", "processing", "succeeded", "failed"] as const;
@@ -241,6 +241,7 @@ export type ComputeJobStatusNormalized = ComputeJobStatus | "unknown";
 export function normalizeComputeInstanceStatus(raw: string | null | undefined): ComputeInstanceStatusNormalized {
   const u = (raw ?? "").trim();
   if (!u) return "unknown";
+  if (u === "deleted") return "deleted";
   if ((COMPUTE_INSTANCE_STATUSES as readonly string[]).includes(u)) {
     return u as ComputeInstanceStatus;
   }
@@ -288,7 +289,8 @@ export type ComputeInstanceCreated = {
 };
 
 export type ComputeDestroyAccepted = {
-  jobId: string;
+  /** Ausente ou `null` quando a API removeu a instância de imediato (sem job `destroy_instance`). */
+  jobId?: string | null;
   instanceId: string;
   /** Resposta da API (instância em destruição); normalizado quando possível. */
   status: ComputeInstanceStatusNormalized;
@@ -319,7 +321,7 @@ export async function createComputeInstance(payload: {
 }
 
 export async function deleteComputeInstance(instanceId: string): Promise<ComputeDestroyAccepted> {
-  const raw = await apiFetch<{ jobId: string; instanceId: string; status: string }>(
+  const raw = await apiFetch<{ jobId?: string | null; instanceId: string; status: string }>(
     `${COMPUTE_INSTANCES_BASE}/${instanceId}`,
     { method: "DELETE", headers: csrfHeaders() },
     { retryAuth: true },

@@ -21,6 +21,8 @@ export function mapComputeLifecycleFromStatus(status: string | null | undefined)
   if (u === "provisioning") return "provisioning";
   if (u === "pending") return "provisioning";
   if (u === "destroying") return "removing";
+  /** Resposta pontual do DELETE (instância já removida na API). */
+  if (u === "deleted") return "removing";
   if (u === "error") return "error";
   if (u === "stopped") return "stopped";
   if (u === "sleeping") return "sleeping";
