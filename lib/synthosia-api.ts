@@ -306,6 +306,8 @@ export async function createComputeInstance(payload: {
   dockerImage: string;
   memoryMb?: number;
   cpuMillicores?: number;
+  /** Porta do processo no contentor (padrão 80). Obrigatório alinhar com a imagem. */
+  internalPort?: number;
   traefikHosts?: string[];
 }): Promise<ComputeInstanceCreated> {
   const raw = await apiFetch<{ instance: ComputeInstanceWire; jobId: string }>(
