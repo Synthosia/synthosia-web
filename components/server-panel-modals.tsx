@@ -377,6 +377,8 @@ function NewServerModal({
   const [branch, setBranch] = useState("");
   const [memoryGb, setMemoryGb] = useState("");
   const [vcpus, setVcpus] = useState("");
+  /** Porta TCP dentro do contentor (processo da imagem); o proxy mapeia para 127.0.0.1:porta-alocada. */
+  const [internalPort, setInternalPort] = useState("80");
   const [host, setHost] = useState("");
   const [port, setPort] = useState("22");
   const [environment, setEnvironment] = useState("production");
@@ -406,6 +408,7 @@ function NewServerModal({
     setBranch("");
     setMemoryGb("");
     setVcpus("");
+    setInternalPort("80");
     setHost("");
     setPort("22");
     setDeployMode("image");
@@ -592,11 +595,21 @@ function NewServerModal({
             mRaw && !Number.isNaN(mGb) ? Math.max(32, Math.round(mGb * 1024)) : undefined;
           const cpuMillicores =
             vRaw && !Number.isNaN(vcpu) ? Math.max(50, Math.round(vcpu * 1000)) : undefined;
+          const pRaw = internalPort.trim();
+          const pNum = pRaw ? Number(pRaw) : 80;
+          const internalPortNum =
+            Number.isFinite(pNum) && Number.isInteger(pNum) && pNum >= 1 && pNum <= 65535 ? pNum : NaN;
+          if (Number.isNaN(internalPortNum)) {
+            setMsg("Porta interna inválida (use 1–65535, ex.: 80 ou 8080).");
+            setBusy(false);
+            return;
+          }
           const created = await createComputeInstance({
             name: n,
             dockerImage: img,
             memoryMb,
             cpuMillicores,
+            internalPort: internalPortNum,
             traefikHosts: [],
           });
           setProvisionJobId(created.jobId);
@@ -624,6 +637,7 @@ function NewServerModal({
       setBranch("");
       setMemoryGb("");
       setVcpus("");
+      setInternalPort("80");
       setHost("");
       setPort("22");
       setDeployMode("image");
@@ -697,6 +711,13 @@ function NewServerModal({
             {t.modalNewName!}
             <input value={name} onChange={(e) => setName(e.target.value)} className={modalInputCls} />
           </label>
+
+          {tab === "cloud" ? (
+            <p className="rounded-lg bg-cyan-50/90 px-3 py-2 text-[11px] leading-snug text-cyan-950 ring-1 ring-cyan-100">
+              O URL público HTTPS é atribuído automaticamente pela plataforma (subdomínio único). Indique só a{" "}
+              <strong>porta interna</strong> em que o seu serviço escuta dentro da imagem Docker.
+            </p>
+          ) : null}
 
           {tab === "cloud" ? (
             <>
@@ -857,6 +878,23 @@ function NewServerModal({
                   </label>
                 </div>
               )}
+
+              <label className="block text-xs font-medium text-gray-700">
+                Porta interna do contentor
+                <input
+                  type="number"
+                  min={1}
+                  max={65535}
+                  value={internalPort}
+                  onChange={(e) => setInternalPort(e.target.value)}
+                  className={cn(modalInputCls, "font-mono")}
+                />
+              </label>
+              <p className="text-[10px] leading-relaxed text-gray-600">
+                Ex.: <span className="font-mono">80</span> para nginx,{" "}
+                <span className="font-mono">8080</span> ou <span className="font-mono">5000</span> conforme a imagem.
+                O Traefik termina HTTPS na porta 443 e encaminha para este serviço.
+              </p>
 
               <div className="border-t border-gray-100 pt-4">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">

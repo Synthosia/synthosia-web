@@ -222,6 +222,7 @@ export const COMPUTE_INSTANCE_STATUSES = [
   "provisioning_requested",
   "provisioning",
   "running",
+  "reconfiguring",
   "destroying",
   "error",
 ] as const;
@@ -332,6 +333,30 @@ export async function deleteComputeInstance(instanceId: string): Promise<Compute
     ...raw,
     status: normalizeComputeInstanceStatus(raw.status),
   };
+}
+
+/** PATCH: altera imagem/recursos/porta interna/hosts; a API marca `reconfiguring` e o agente recria o contentor na mesma porta pública local. */
+export async function patchComputeInstance(
+  instanceId: string,
+  patch: {
+    name?: string;
+    dockerImage?: string;
+    memoryMb?: number;
+    cpuMillicores?: number;
+    internalPort?: number;
+    traefikHosts?: string[];
+  },
+): Promise<ComputeInstanceCreated> {
+  const raw = await apiFetch<{ instance: ComputeInstanceWire; jobId: string }>(
+    `${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(instanceId)}`,
+    {
+      method: "PATCH",
+      headers: csrfHeaders(),
+      body: JSON.stringify(patch),
+    },
+    { retryAuth: true },
+  );
+  return { jobId: raw.jobId, instance: normalizeComputeInstanceBody(raw.instance) };
 }
 
 /** Séries por minuto (CPU %, memória %, rede Mbps) persistidas a partir do agente. */

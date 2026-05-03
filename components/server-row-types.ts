@@ -19,6 +19,7 @@ export function mapComputeLifecycleFromStatus(status: string | null | undefined)
   if (u === "provisioning_requested") return "pending_deploy";
   /** Provisionamento em curso no agente */
   if (u === "provisioning") return "provisioning";
+  if (u === "reconfiguring") return "provisioning";
   if (u === "pending") return "provisioning";
   if (u === "destroying") return "removing";
   /** Resposta pontual do DELETE (instância já removida na API). */
