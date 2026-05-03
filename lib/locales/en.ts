@@ -306,7 +306,8 @@ const en = {
       attentionAllClear: "No critical alerts in this window.",
       cloudStatePendingDeploy: "Created — deploy pending",
       cloudStateRunning: "Running",
-      cloudStateProvisioning: "Build / deploy in progress",
+      cloudStateProvisioning: "Provisioning in progress",
+      cloudStateReconfiguring: "Applying configuration…",
       cloudStateError: "Deploy error",
       cloudStateOrphan: "Missing at cloud provider",
       cloudStateSleeping: "Sleeping",
@@ -359,6 +360,7 @@ const en = {
       actionDeploy: "Deploy",
       actionRestart: "Restart",
       actionStop: "Stop",
+      actionStart: "Start",
       actionDelete: "Delete",
       deleteConfirm:
         "Delete this managed service? Infrastructure will be removed and this cannot be undone.",

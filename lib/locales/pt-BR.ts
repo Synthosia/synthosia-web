@@ -308,7 +308,8 @@ const ptBR = {
       attentionAllClear: "Nenhum alerta crítico neste período.",
       cloudStatePendingDeploy: "Criado — deploy pendente",
       cloudStateRunning: "Em execução",
-      cloudStateProvisioning: "Build / deploy em curso",
+      cloudStateProvisioning: "Provisionamento em curso",
+      cloudStateReconfiguring: "A aplicar configuração…",
       cloudStateError: "Erro no deploy",
       cloudStateOrphan: "Ausente no fornecedor cloud",
       cloudStateSleeping: "Em repouso",
@@ -360,6 +361,7 @@ const ptBR = {
       actionDeploy: "Deploy",
       actionRestart: "Reiniciar",
       actionStop: "Parar",
+      actionStart: "Iniciar",
       actionDelete: "Eliminar",
       deleteConfirm:
         "Eliminar este serviço gerido? A infraestrutura deixa de existir e esta ação não pode ser anulada.",

@@ -222,6 +222,7 @@ export const COMPUTE_INSTANCE_STATUSES = [
   "provisioning_requested",
   "provisioning",
   "running",
+  "stopped",
   "reconfiguring",
   "destroying",
   "error",
@@ -357,6 +358,34 @@ export async function patchComputeInstance(
     { retryAuth: true },
   );
   return { jobId: raw.jobId, instance: normalizeComputeInstanceBody(raw.instance) };
+}
+
+export type ComputeLifecycleJobAccepted = {
+  jobId: string;
+};
+
+export async function postComputeInstanceStop(instanceId: string): Promise<ComputeLifecycleJobAccepted> {
+  return apiFetch<ComputeLifecycleJobAccepted>(
+    `${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(instanceId)}/stop`,
+    { method: "POST", headers: csrfHeaders() },
+    { retryAuth: true },
+  );
+}
+
+export async function postComputeInstanceStart(instanceId: string): Promise<ComputeLifecycleJobAccepted> {
+  return apiFetch<ComputeLifecycleJobAccepted>(
+    `${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(instanceId)}/start`,
+    { method: "POST", headers: csrfHeaders() },
+    { retryAuth: true },
+  );
+}
+
+export async function postComputeInstanceRestart(instanceId: string): Promise<ComputeLifecycleJobAccepted> {
+  return apiFetch<ComputeLifecycleJobAccepted>(
+    `${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(instanceId)}/restart`,
+    { method: "POST", headers: csrfHeaders() },
+    { retryAuth: true },
+  );
 }
 
 /** Séries por minuto (CPU %, memória %, rede Mbps) persistidas a partir do agente. */

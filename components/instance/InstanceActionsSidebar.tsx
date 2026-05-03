@@ -12,9 +12,11 @@ export function InstanceActionsSidebar({
   railwayMissing,
   hasDeployment,
   hideLifecycleControls,
+  computePlane,
   onDeploy,
   onRestart,
   onStop,
+  onStart,
   onDelete,
 }: {
   labels: {
@@ -24,6 +26,7 @@ export function InstanceActionsSidebar({
     deploy: string;
     restart: string;
     stop: string;
+    start: string;
     delete: string;
     billingPlaceholder: string;
     billingLink: string;
@@ -41,26 +44,64 @@ export function InstanceActionsSidebar({
   lifecycle: CloudLifecycle;
   railwayMissing: boolean;
   hasDeployment: boolean;
-  /** Quando true, só «Eliminar» (compute plane / jobs — sem deploy na API). */
+  /** Railway: quando true, só «Eliminar». Ignorado quando `computePlane`. */
   hideLifecycleControls?: boolean;
+  /** VPS/compute: Parar/Reiniciar em execução; Iniciar/Deploy parado; Eliminar sempre. */
+  computePlane?: boolean;
   onDeploy: () => void;
   onRestart: () => void;
   onStop: () => void;
+  onStart: () => void;
   onDelete: () => void;
 }) {
   const running = lifecycle === "running";
   const provisioning = lifecycle === "provisioning";
+  const reconfiguring = lifecycle === "reconfiguring";
   const removing = lifecycle === "removing";
+  const stopped = lifecycle === "stopped";
+  const errorLc = lifecycle === "error";
+
+  const computeTransitioning =
+    computePlane &&
+    (lifecycle === "provisioning" ||
+      lifecycle === "pending_deploy" ||
+      lifecycle === "reconfiguring" ||
+      lifecycle === "removing");
+
+  const computeOnlineActions = computePlane && running && !computeTransitioning;
+  const computeOfflineActions = computePlane && stopped && !computeTransitioning;
+  const computeErrorSurface = computePlane && errorLc && !computeTransitioning;
+
   const canStop = running && !railwayMissing;
   const canRestart =
-    hasDeployment && !railwayMissing && lifecycle !== "pending_deploy" && lifecycle !== "provisioning";
+    hasDeployment &&
+    !railwayMissing &&
+    lifecycle !== "pending_deploy" &&
+    lifecycle !== "provisioning" &&
+    lifecycle !== "reconfiguring";
 
   const healthItems: { label: string; ok: boolean }[] = [
-    { label: labels.healthCpu, ok: !railwayMissing && !provisioning && !removing },
-    { label: labels.healthDeploy, ok: hasDeployment && !railwayMissing && !removing },
+    { label: labels.healthCpu, ok: !railwayMissing && !provisioning && !reconfiguring && !removing },
+    {
+      label: labels.healthDeploy,
+      ok: (computePlane ? hasDeployment : hasDeployment && !railwayMissing) && !removing,
+    },
     { label: labels.healthSync, ok: !railwayMissing && !removing },
     { label: labels.healthApi, ok: !railwayMissing && !removing },
   ];
+
+  const btnPrimary = cn(
+    "rounded-xl border border-[#1a73e8] bg-[#1a73e8] px-4 py-2.5 text-sm font-medium text-white",
+    "shadow-sm transition hover:bg-[#1557b0] disabled:cursor-not-allowed disabled:opacity-45",
+  );
+  const btnSecondary = cn(
+    "rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)]",
+    "transition hover:bg-[var(--surface-interactive)] disabled:cursor-not-allowed disabled:opacity-45",
+  );
+  const btnMuted = cn(
+    "rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-interactive)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)]",
+    "transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45",
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -77,43 +118,69 @@ export function InstanceActionsSidebar({
           {labels.actions}
         </h2>
         <div className="mt-4 flex flex-col gap-2">
-          {!hideLifecycleControls ? (
+          {computePlane ? (
             <>
-          <button
-            type="button"
-            disabled={!canManage || busy || provisioning || railwayMissing}
-            onClick={onDeploy}
-            className={cn(
-              "rounded-xl border border-[#1a73e8] bg-[#1a73e8] px-4 py-2.5 text-sm font-medium text-white",
-              "shadow-sm transition hover:bg-[#1557b0] disabled:cursor-not-allowed disabled:opacity-45",
-            )}
-          >
-            {labels.deploy}
-          </button>
-          <button
-            type="button"
-            disabled={!canManage || busy || !canRestart}
-            onClick={onRestart}
-            className={cn(
-              "rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)]",
-              "transition hover:bg-[var(--surface-interactive)] disabled:cursor-not-allowed disabled:opacity-45",
-            )}
-          >
-            {labels.restart}
-          </button>
-          <button
-            type="button"
-            disabled={!canManage || busy || !canStop}
-            onClick={() => {
-              if (window.confirm(labels.confirmStop)) onStop();
-            }}
-            className={cn(
-              "rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-interactive)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)]",
-              "transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-45",
-            )}
-          >
-            {labels.stop}
-          </button>
+              {computeOnlineActions ? (
+                <>
+                  <button
+                    type="button"
+                    disabled={!canManage || busy}
+                    onClick={() => {
+                      if (window.confirm(labels.confirmStop)) onStop();
+                    }}
+                    className={btnMuted}
+                  >
+                    {labels.stop}
+                  </button>
+                  <button type="button" disabled={!canManage || busy} onClick={onRestart} className={btnSecondary}>
+                    {labels.restart}
+                  </button>
+                </>
+              ) : null}
+              {computeOfflineActions ? (
+                <>
+                  <button type="button" disabled={!canManage || busy} onClick={onStart} className={btnPrimary}>
+                    {labels.start}
+                  </button>
+                  <button type="button" disabled={!canManage || busy} onClick={onDeploy} className={btnSecondary}>
+                    {labels.deploy}
+                  </button>
+                </>
+              ) : null}
+              {computeErrorSurface ? (
+                <button type="button" disabled={!canManage || busy} onClick={onDeploy} className={btnSecondary}>
+                  {labels.deploy}
+                </button>
+              ) : null}
+            </>
+          ) : !hideLifecycleControls ? (
+            <>
+              <button
+                type="button"
+                disabled={!canManage || busy || provisioning || reconfiguring || railwayMissing}
+                onClick={onDeploy}
+                className={btnPrimary}
+              >
+                {labels.deploy}
+              </button>
+              <button
+                type="button"
+                disabled={!canManage || busy || !canRestart}
+                onClick={onRestart}
+                className={btnSecondary}
+              >
+                {labels.restart}
+              </button>
+              <button
+                type="button"
+                disabled={!canManage || busy || !canStop}
+                onClick={() => {
+                  if (window.confirm(labels.confirmStop)) onStop();
+                }}
+                className={btnMuted}
+              >
+                {labels.stop}
+              </button>
             </>
           ) : null}
           <button

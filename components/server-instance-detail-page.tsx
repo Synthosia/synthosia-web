@@ -22,7 +22,15 @@ import {
 import { cn } from "@/lib/cn";
 import type { AccountSession } from "@/lib/account-session";
 import { buildAccountPanelHref, type InstanceDetailTab } from "@/lib/account-panel-url";
-import { ApiClientError, deleteComputeInstance, listComputeInstances, type ComputeInstance } from "@/lib/synthosia-api";
+import {
+  ApiClientError,
+  deleteComputeInstance,
+  listComputeInstances,
+  postComputeInstanceRestart,
+  postComputeInstanceStart,
+  postComputeInstanceStop,
+  type ComputeInstance,
+} from "@/lib/synthosia-api";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -84,12 +92,30 @@ export function ServerInstanceDetailPage({
       st !== "pending" &&
       st !== "provisioning_requested" &&
       st !== "provisioning" &&
+      st !== "reconfiguring" &&
       st !== "destroying"
     )
       return;
     const id = window.setInterval(() => void refresh({ silent: true }), 4000);
     return () => window.clearInterval(id);
   }, [service, refresh]);
+
+  const pollInstanceRow = useCallback(
+    async (done: (row: ComputeInstance | null) => boolean) => {
+      for (let i = 0; i < 25; i++) {
+        if (i > 0) await new Promise((r) => setTimeout(r, 2000));
+        try {
+          const list = await listComputeInstances();
+          const s = list.find((x) => x.id === cloudBindingId) ?? null;
+          setService(s);
+          if (done(s)) return;
+        } catch {
+          break;
+        }
+      }
+    },
+    [cloudBindingId],
+  );
 
   const serverRow: ServerRow | null = useMemo(
     () => (service ? mapComputeInstanceToRow(service) : null),
@@ -110,6 +136,46 @@ export function ServerInstanceDetailPage({
       setLifecycleBusy(false);
     }
   }, [canManage, cloudBindingId, onBack, sm.modalError]);
+
+  const runStop = useCallback(async () => {
+    if (!canManage) return;
+    setLifecycleBusy(true);
+    try {
+      await postComputeInstanceStop(cloudBindingId);
+      await pollInstanceRow((s) => s?.status === "stopped" || s?.status === "error");
+    } catch (e) {
+      window.alert(e instanceof ApiClientError ? e.message : sm.modalError ?? "Erro");
+    } finally {
+      setLifecycleBusy(false);
+    }
+  }, [canManage, cloudBindingId, pollInstanceRow, sm.modalError]);
+
+  const runStart = useCallback(async () => {
+    if (!canManage) return;
+    setLifecycleBusy(true);
+    try {
+      await postComputeInstanceStart(cloudBindingId);
+      await pollInstanceRow((s) => s?.status === "running" || s?.status === "error");
+    } catch (e) {
+      window.alert(e instanceof ApiClientError ? e.message : sm.modalError ?? "Erro");
+    } finally {
+      setLifecycleBusy(false);
+    }
+  }, [canManage, cloudBindingId, pollInstanceRow, sm.modalError]);
+
+  const runRestart = useCallback(async () => {
+    if (!canManage) return;
+    setLifecycleBusy(true);
+    try {
+      await postComputeInstanceRestart(cloudBindingId);
+      await new Promise((r) => setTimeout(r, 2500));
+      await refresh({ silent: true });
+    } catch (e) {
+      window.alert(e instanceof ApiClientError ? e.message : sm.modalError ?? "Erro");
+    } finally {
+      setLifecycleBusy(false);
+    }
+  }, [canManage, cloudBindingId, refresh, sm.modalError]);
 
   const tabCls = (active: boolean) =>
     cn(
@@ -174,6 +240,7 @@ export function ServerInstanceDetailPage({
       deploy: sm.actionDeploy,
       restart: sm.actionRestart,
       stop: sm.actionStop,
+      start: sm.actionStart,
       delete: sm.actionDelete,
       billingPlaceholder: sm.sidebarBillingPlaceholder,
       billingLink: sm.sidebarBillingLink,
@@ -442,11 +509,17 @@ export function ServerInstanceDetailPage({
               busy={lifecycleBusy}
               lifecycle={cloudLifecycle}
               railwayMissing={false}
-              hasDeployment={service.status === "running"}
-              hideLifecycleControls
-              onDeploy={() => {}}
-              onRestart={() => {}}
-              onStop={() => {}}
+              computePlane
+              hasDeployment={
+                service.status === "running" ||
+                service.status === "stopped" ||
+                service.status === "error" ||
+                service.status === "reconfiguring"
+              }
+              onDeploy={() => setTab("configuration")}
+              onRestart={() => void runRestart()}
+              onStop={() => void runStop()}
+              onStart={() => void runStart()}
               onDelete={() => void runDelete()}
             />
           </aside>
