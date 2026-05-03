@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/components/language-provider";
 import { cn } from "@/lib/cn";
+import { AuditPeersTable } from "@/components/instance/instance-audit-peers";
 import { cloudManagedServiceStreamUrl } from "@/lib/synthosia-api";
 
 type CloudServiceSseSnapshot = {
@@ -11,6 +12,9 @@ type CloudServiceSseSnapshot = {
   metrics?: {
     cpu?: { ts?: number; value?: number };
     memoryGb?: { ts?: number; value?: number };
+    networkInMbps?: { ts?: number; value?: number };
+    networkOutMbps?: { ts?: number; value?: number };
+    telemetryExtras?: Record<string, unknown>;
   };
   runtime?: {
     containerOsHint?: string;
@@ -156,9 +160,26 @@ export function CloudServiceStreamPanels({
 
   const cpu = snap?.metrics?.cpu?.value;
   const mem = snap?.metrics?.memoryGb?.value;
+  const netIn = snap?.metrics?.networkInMbps?.value;
+  const netOut = snap?.metrics?.networkOutMbps?.value;
+  const auditRaw = snap?.metrics?.telemetryExtras?.audit as
+    | { establishedFlows?: number; remotePeers?: unknown[] }
+    | undefined;
+  const auditFlows =
+    typeof auditRaw?.establishedFlows === "number" ? auditRaw.establishedFlows : null;
+  const auditPeerSlots = Array.isArray(auditRaw?.remotePeers) ? auditRaw.remotePeers.length : null;
+
   const cpuLabel =
     cpu != null ? `${cpu <= 1 && cpu >= 0 ? Math.round(cpu * 100) : Math.round(cpu)}%` : "—";
   const memLabel = mem != null ? `${mem < 32 ? mem.toFixed(2) : Math.round(mem)} GB` : "—";
+  const mbpsLabel = (v: number | undefined) =>
+    v != null && Number.isFinite(v) ? `${v.toFixed(2)} Mbps` : "—";
+  const auditLabel =
+    auditFlows != null || auditPeerSlots != null
+      ? (sm.liveStreamAuditSummary ?? "{flows} fluxos · {peers} IPs remotos")
+          .replace("{flows}", String(auditFlows ?? "—"))
+          .replace("{peers}", String(auditPeerSlots ?? "—"))
+      : null;
 
   if (!cloudBindingId || railwayMissing) {
     return (
@@ -263,7 +284,55 @@ export function CloudServiceStreamPanels({
                 <p className="text-[10px] font-medium uppercase text-[var(--text-muted)]">{sm.liveStreamMem}</p>
                 <p className="mt-0.5 font-semibold tabular-nums text-[var(--text-primary)]">{memLabel}</p>
               </div>
+              <div
+                className={cn(
+                  "rounded-md px-2 py-2 shadow-sm",
+                  gcp
+                    ? "border border-[var(--border-subtle)] bg-[var(--surface-raised)]"
+                    : "border border-white/90 bg-white",
+                )}
+              >
+                <p className="text-[10px] font-medium uppercase text-[var(--text-muted)]">
+                  {sm.liveStreamNetIn ?? "Rede ↓"}
+                </p>
+                <p className="mt-0.5 font-semibold tabular-nums text-[var(--text-primary)]">
+                  {mbpsLabel(netIn)}
+                </p>
+              </div>
+              <div
+                className={cn(
+                  "rounded-md px-2 py-2 shadow-sm",
+                  gcp
+                    ? "border border-[var(--border-subtle)] bg-[var(--surface-raised)]"
+                    : "border border-white/90 bg-white",
+                )}
+              >
+                <p className="text-[10px] font-medium uppercase text-[var(--text-muted)]">
+                  {sm.liveStreamNetOut ?? "Rede ↑"}
+                </p>
+                <p className="mt-0.5 font-semibold tabular-nums text-[var(--text-primary)]">
+                  {mbpsLabel(netOut)}
+                </p>
+              </div>
             </div>
+            {auditLabel ? (
+              <p className="mt-3 text-[11px] leading-snug text-[var(--text-secondary)]">
+                <span className="font-medium text-[var(--text-muted)]">{sm.liveStreamAudit ?? "Auditoria"}: </span>
+                {auditLabel}
+              </p>
+            ) : null}
+            {snap?.metrics?.telemetryExtras?.audit ? (
+              <AuditPeersTable
+                variant="embedded"
+                audit={snap.metrics.telemetryExtras.audit}
+                labels={{
+                  caption: sm.auditPeersStreamCaption ?? "Origens remotas (SSE)",
+                  colAddress: sm.auditPeersColAddress ?? "Endereço",
+                  colConnections: sm.auditPeersColConnections ?? "Ligações",
+                  empty: sm.auditPeersEmpty ?? "Sem dados nesta amostra.",
+                }}
+              />
+            ) : null}
             {snap?.deployment?.status ? (
               <p className="mt-4 text-[11px] text-[var(--text-secondary)]">
                 <span className="font-medium text-[var(--text-muted)]">{sm.liveStreamDeploy}: </span>

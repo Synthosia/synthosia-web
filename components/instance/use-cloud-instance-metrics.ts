@@ -1,11 +1,51 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { MetricSeriesResponse } from "@/components/instance/cloud-metrics";
+import { getComputeInstanceMetricsSeries } from "@/lib/synthosia-api";
 
-/** Métricas por instância: placeholder até o agente reportar séries à API. */
+/** Métricas por instância: séries minuto-a-minuto na API (`metrics-series`). */
 export function useCloudInstanceMetrics(
-  _bindingId: string | undefined,
-  _hours: number,
+  bindingId: string | undefined,
+  hours: number,
 ): { data: MetricSeriesResponse | null; loading: boolean; error: boolean } {
-  return { data: null, loading: false, error: false };
+  const [data, setData] = useState<MetricSeriesResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!bindingId) {
+      setData(null);
+      setLoading(false);
+      setError(false);
+      return;
+    }
+    const minutes = Math.min(1440, Math.max(1, Math.round(hours * 60)));
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+    getComputeInstanceMetricsSeries(bindingId, minutes)
+      .then((res) => {
+        if (cancelled) return;
+        const mapped: MetricSeriesResponse = {
+          series: res.series.map((s) => ({
+            measurement: s.measurement,
+            points: s.points.map((p) => ({ ts: p.ts, value: p.value })),
+          })),
+          windowHours: res.windowHours,
+        };
+        setData(mapped);
+      })
+      .catch(() => {
+        if (!cancelled) setError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [bindingId, hours]);
+
+  return { data, loading, error };
 }

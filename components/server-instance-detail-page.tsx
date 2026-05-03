@@ -7,6 +7,7 @@ import { CloudServiceConfigForm } from "@/components/cloud-service-config-form";
 import { CloudServiceStreamPanels } from "@/components/cloud-service-stream-panels";
 import { InstanceActionsSidebar } from "@/components/instance/InstanceActionsSidebar";
 import { InstanceMetricsStrip } from "@/components/instance/InstanceMetricsStrip";
+import { InstanceAuditPeersPollPanel } from "@/components/instance/instance-audit-peers";
 import { InstanceMonitoringCharts } from "@/components/instance/InstanceMonitoringCharts";
 import { useLanguage } from "@/components/language-provider";
 import {
@@ -148,6 +149,19 @@ export function ServerInstanceDetailPage({
       networkHint: sm.metricNetworkHint,
       loadError: sm.modalError,
       loading: sm.instanceMonitoringLoading,
+    }),
+    [sm],
+  );
+
+  const auditPeersPollLabels = useMemo(
+    () => ({
+      panelTitle: sm.auditPeersPanelTitle,
+      panelSubtitle: sm.auditPeersPanelSubtitle,
+      pollHint: sm.auditPeersPollHint,
+      colAddress: sm.auditPeersColAddress,
+      colConnections: sm.auditPeersColConnections,
+      empty: sm.auditPeersEmpty,
+      recordedAtTemplate: sm.auditPeersRecordedAt,
     }),
     [sm],
   );
@@ -368,8 +382,11 @@ export function ServerInstanceDetailPage({
           ) : null}
 
           {tab === "monitoring" ? (
-            <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-              <InstanceMonitoringCharts bindingId={cloudBindingId} labels={monitoringLabels} />
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <InstanceMonitoringCharts bindingId={cloudBindingId} labels={monitoringLabels} />
+              </div>
+              <InstanceAuditPeersPollPanel bindingId={cloudBindingId} labels={auditPeersPollLabels} />
             </div>
           ) : null}
 

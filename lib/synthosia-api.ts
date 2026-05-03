@@ -332,6 +332,39 @@ export async function deleteComputeInstance(instanceId: string): Promise<Compute
   };
 }
 
+/** Séries por minuto (CPU %, memória %, rede Mbps) persistidas a partir do agente. */
+export type ComputeInstanceMetricSeries = {
+  series: { measurement: string; points: { ts: number; value: number }[] }[];
+  windowHours: number;
+};
+
+export async function getComputeInstanceMetricsSeries(
+  instanceId: string,
+  minutes: number,
+): Promise<ComputeInstanceMetricSeries> {
+  const m = Math.min(1440, Math.max(1, Math.round(minutes)));
+  const q = new URLSearchParams({ minutes: String(m) });
+  return apiFetch<ComputeInstanceMetricSeries>(
+    `${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(instanceId)}/metrics-series?${q}`,
+    { method: "GET" },
+    { retryAuth: true },
+  );
+}
+
+/** Último bloco `audit` das métricas persistidas (pares TCP remotos, etc.). */
+export type ComputeInstanceAuditLatest = {
+  recordedAt: string | null;
+  audit: Record<string, unknown>;
+};
+
+export async function getComputeInstanceAuditLatest(instanceId: string): Promise<ComputeInstanceAuditLatest> {
+  return apiFetch<ComputeInstanceAuditLatest>(
+    `${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(instanceId)}/audit-latest`,
+    { method: "GET" },
+    { retryAuth: true },
+  );
+}
+
 /** VPS gerida: slug + `{slug}.{SYNTHOSIA_COMPUTE_PUBLIC_DOMAIN}` + DNS A (Cloudflare) + job para o agente. */
 export async function createManagedServerInstance(payload: {
   label: string;
