@@ -314,6 +314,7 @@ const ptBR = {
       cloudStateSleeping: "Em repouso",
       cloudStateStopped: "Parado",
       cloudStateRemoving: "Remoção em curso",
+      cloudStateUnknown: "Estado desconhecido",
       orphanBannerTitle: "Recurso ausente no plano de computação",
       orphanBannerBody:
         "O registo na Synthosia aponta para um ID que já não existe no agente/VPS. Pode criar uma nova instância ou remover só o registo local.",

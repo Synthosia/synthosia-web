@@ -312,6 +312,7 @@ const en = {
       cloudStateSleeping: "Sleeping",
       cloudStateStopped: "Stopped",
       cloudStateRemoving: "Removal in progress",
+      cloudStateUnknown: "Unknown status",
       orphanBannerTitle: "Resource missing on the compute plane",
       orphanBannerBody:
         "The Synthosia record points to an ID that no longer exists on the agent/VPS. Create a new instance or remove only the local record.",

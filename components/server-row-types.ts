@@ -7,18 +7,25 @@ export type CloudLifecycle =
   | "removing"
   | "error"
   | "sleeping"
-  | "stopped";
+  | "stopped"
+  /** Estado devolvido pela API mas não previsto no contrato UI — não usar como pending deploy */
+  | "unknown";
 
-/** Estado de instância no compute plane (VPS / jobs). */
+/** Estado de instância no compute plane (VPS / jobs). Alinhado à ADR `docs/adr/001-compute-plane-state-contract.md`. */
 export function mapComputeLifecycleFromStatus(status: string | null | undefined): CloudLifecycle {
   const u = (status ?? "").toLowerCase();
   if (u === "running") return "running";
+  /** Pedido de provisionamento na API — UI: fila / à espera do agente */
+  if (u === "provisioning_requested") return "pending_deploy";
+  /** Provisionamento em curso no agente */
+  if (u === "provisioning") return "provisioning";
   if (u === "pending") return "provisioning";
   if (u === "destroying") return "removing";
   if (u === "error") return "error";
   if (u === "stopped") return "stopped";
   if (u === "sleeping") return "sleeping";
-  return "pending_deploy";
+  if (u === "") return "pending_deploy";
+  return "unknown";
 }
 
 export function mapComputeInstanceToRow(r: ComputeInstance): ServerRow {
@@ -68,6 +75,7 @@ export function cloudStatusBadgeClass(lc: CloudLifecycle | undefined): string {
   if (lc === "removing") return "bg-orange-50 text-orange-900 ring-1 ring-orange-100";
   if (lc === "error") return "bg-red-50 text-red-800 ring-1 ring-red-100";
   if (lc === "stopped") return "bg-gray-100 text-gray-800 ring-1 ring-gray-200";
+  if (lc === "unknown") return "bg-violet-50 text-violet-900 ring-1 ring-violet-100";
   return "bg-gray-50 text-gray-800 ring-1 ring-gray-100";
 }
 
@@ -79,6 +87,7 @@ export function cloudStatusDotClass(lc: CloudLifecycle | undefined): string {
   if (lc === "removing") return "bg-orange-500";
   if (lc === "error") return "bg-red-500";
   if (lc === "stopped") return "bg-gray-400";
+  if (lc === "unknown") return "bg-violet-500";
   return "bg-gray-400";
 }
 
@@ -91,5 +100,6 @@ export function cloudStatusLabel(row: ServerRow, sm: Record<string, string>): st
   if (row.cloudLifecycle === "error") return sm.cloudStateError ?? "Error";
   if (row.cloudLifecycle === "sleeping") return sm.cloudStateSleeping ?? "Sleeping";
   if (row.cloudLifecycle === "stopped") return sm.cloudStateStopped ?? "Stopped";
+  if (row.cloudLifecycle === "unknown") return sm.cloudStateUnknown ?? "Estado desconhecido";
   return row.healthy ? (sm.healthy ?? "OK") : (sm.unhealthy ?? "Issue");
 }

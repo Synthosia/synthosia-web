@@ -87,7 +87,7 @@ export function CloudServiceConsole({
     );
   }
 
-  const lc = instance ? mapComputeLifecycleFromStatus(instance.status) : "pending_deploy";
+  const lc = instance ? mapComputeLifecycleFromStatus(instance.status) : "unknown";
 
   return (
     <div className="space-y-5">

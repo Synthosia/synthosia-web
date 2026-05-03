@@ -79,7 +79,13 @@ export function ServerInstanceDetailPage({
   useEffect(() => {
     if (!service) return;
     const st = service.status;
-    if (st !== "pending" && st !== "destroying") return;
+    if (
+      st !== "pending" &&
+      st !== "provisioning_requested" &&
+      st !== "provisioning" &&
+      st !== "destroying"
+    )
+      return;
     const id = window.setInterval(() => void refresh({ silent: true }), 4000);
     return () => window.clearInterval(id);
   }, [service, refresh]);
@@ -89,7 +95,7 @@ export function ServerInstanceDetailPage({
     [service],
   );
 
-  const cloudLifecycle: CloudLifecycle = service ? mapComputeLifecycleFromStatus(service.status) : "pending_deploy";
+  const cloudLifecycle: CloudLifecycle = service ? mapComputeLifecycleFromStatus(service.status) : "unknown";
 
   const runDelete = useCallback(async () => {
     if (!canManage) return;

@@ -216,6 +216,52 @@ export function jobProvisioningEventsUrl(jobId: string): string {
   return `${API_URL}/v1/infrastructure/jobs/${encodeURIComponent(jobId)}/events`;
 }
 
+/** Estados canónicos em `compute_instances.status` (CHECK na API + ADR 001). */
+export const COMPUTE_INSTANCE_STATUSES = [
+  "pending",
+  "provisioning_requested",
+  "provisioning",
+  "running",
+  "destroying",
+  "error",
+] as const;
+
+export type ComputeInstanceStatus = (typeof COMPUTE_INSTANCE_STATUSES)[number];
+
+/** Após normalização na fronteira HTTP: só valores do CHECK da API ou `unknown` explícito (drift visível). */
+export type ComputeInstanceStatusNormalized = ComputeInstanceStatus | "unknown";
+
+/** Estados em `compute_jobs.status` quando expostos em payloads de jobs. */
+export const COMPUTE_JOB_STATUSES = ["pending", "processing", "succeeded", "failed"] as const;
+
+export type ComputeJobStatus = (typeof COMPUTE_JOB_STATUSES)[number];
+
+export type ComputeJobStatusNormalized = ComputeJobStatus | "unknown";
+
+export function normalizeComputeInstanceStatus(raw: string | null | undefined): ComputeInstanceStatusNormalized {
+  const u = (raw ?? "").trim();
+  if (!u) return "unknown";
+  if ((COMPUTE_INSTANCE_STATUSES as readonly string[]).includes(u)) {
+    return u as ComputeInstanceStatus;
+  }
+  return "unknown";
+}
+
+export function normalizeComputeJobStatus(raw: string | null | undefined): ComputeJobStatusNormalized {
+  const u = (raw ?? "").trim();
+  if (!u) return "unknown";
+  if ((COMPUTE_JOB_STATUSES as readonly string[]).includes(u)) {
+    return u as ComputeJobStatus;
+  }
+  return "unknown";
+}
+
+type ComputeInstanceWire = Omit<ComputeInstance, "status"> & { status: string };
+
+function normalizeComputeInstanceBody(row: ComputeInstanceWire): ComputeInstance {
+  return { ...row, status: normalizeComputeInstanceStatus(row.status) };
+}
+
 /** Instância de workload no compute plane (VPS + agente + jobs). */
 export type ComputeInstance = {
   id: string;
@@ -224,7 +270,7 @@ export type ComputeInstance = {
   memoryMb: number;
   cpuMillicores: number;
   traefikHosts: string[];
-  status: string;
+  status: ComputeInstanceStatusNormalized;
   nerdctlContainerName?: string | null;
   agentId?: string | null;
   slug?: string | null;
@@ -244,11 +290,13 @@ export type ComputeInstanceCreated = {
 export type ComputeDestroyAccepted = {
   jobId: string;
   instanceId: string;
-  status: string;
+  /** Resposta da API (instância em destruição); normalizado quando possível. */
+  status: ComputeInstanceStatusNormalized;
 };
 
 export async function listComputeInstances(): Promise<ComputeInstance[]> {
-  return apiFetch<ComputeInstance[]>(COMPUTE_INSTANCES_BASE, { method: "GET" }, { retryAuth: true });
+  const rows = await apiFetch<ComputeInstanceWire[]>(COMPUTE_INSTANCES_BASE, { method: "GET" }, { retryAuth: true });
+  return rows.map(normalizeComputeInstanceBody);
 }
 
 export async function createComputeInstance(payload: {
@@ -258,7 +306,7 @@ export async function createComputeInstance(payload: {
   cpuMillicores?: number;
   traefikHosts?: string[];
 }): Promise<ComputeInstanceCreated> {
-  return apiFetch<ComputeInstanceCreated>(
+  const raw = await apiFetch<{ instance: ComputeInstanceWire; jobId: string }>(
     COMPUTE_INSTANCES_BASE,
     {
       method: "POST",
@@ -267,14 +315,19 @@ export async function createComputeInstance(payload: {
     },
     { retryAuth: true },
   );
+  return { jobId: raw.jobId, instance: normalizeComputeInstanceBody(raw.instance) };
 }
 
 export async function deleteComputeInstance(instanceId: string): Promise<ComputeDestroyAccepted> {
-  return apiFetch<ComputeDestroyAccepted>(
+  const raw = await apiFetch<{ jobId: string; instanceId: string; status: string }>(
     `${COMPUTE_INSTANCES_BASE}/${instanceId}`,
     { method: "DELETE", headers: csrfHeaders() },
     { retryAuth: true },
   );
+  return {
+    ...raw,
+    status: normalizeComputeInstanceStatus(raw.status),
+  };
 }
 
 /** VPS gerida: slug + `{slug}.{SYNTHOSIA_COMPUTE_PUBLIC_DOMAIN}` + DNS A (Cloudflare) + job para o agente. */
@@ -285,7 +338,7 @@ export async function createManagedServerInstance(payload: {
   memoryMb?: number;
   cpuMillicores?: number;
 }): Promise<ComputeInstanceCreated> {
-  return apiFetch<ComputeInstanceCreated>(
+  const raw = await apiFetch<{ instance: ComputeInstanceWire; jobId: string }>(
     MANAGED_SERVER_INSTANCES_BASE,
     {
       method: "POST",
@@ -294,6 +347,7 @@ export async function createManagedServerInstance(payload: {
     },
     { retryAuth: true },
   );
+  return { jobId: raw.jobId, instance: normalizeComputeInstanceBody(raw.instance) };
 }
 
 export async function createServerInstance(payload: {
