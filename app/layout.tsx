@@ -69,6 +69,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`theme-light ${displayFont.variable} ${serifFont.variable} ${monoFont.variable} antialiased`}
     >
+      <head>
+        {/* <!-- SimpleTracker — instale este snippet em todas as páginas e subdomínios. A escolha entre configuração padrão e específica é automática. --> */}
+        <script src="https://tracker.simplejus.services/api/v1/js/01003.js" async></script>
+      </head>
       <body className="surface-page min-h-dvh">
         <ThemeProvider>
           <LanguageProvider>
