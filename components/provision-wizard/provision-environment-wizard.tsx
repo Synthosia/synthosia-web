@@ -18,6 +18,7 @@ import {
   REGIONS,
   STACK_TEMPLATES,
   templateById,
+  type EnvVarRow,
   type ProvisionWizardState,
 } from "@/lib/provision-wizard/schema";
 import { WizardStepper } from "@/components/provision-wizard/wizard-stepper";
@@ -30,6 +31,16 @@ import { LaunchReview } from "@/components/provision-wizard/launch-review";
 import { LiveDeployConsole } from "@/components/provision-wizard/live-deploy-console";
 
 const STEP_KEYS = ["project", "plan", "template", "repo", "env", "deploy", "review"] as const;
+
+function envRowsToEnvironment(rows: EnvVarRow[]): Record<string, string> | undefined {
+  const o: Record<string, string> = {};
+  for (const r of rows) {
+    const k = r.key.trim();
+    if (!k) continue;
+    o[k] = r.value;
+  }
+  return Object.keys(o).length > 0 ? o : undefined;
+}
 
 function slugify(name: string): string {
   return name
@@ -127,6 +138,7 @@ export function ProvisionEnvironmentWizard({
       const hosts = state.domain.trim()
         ? [state.domain.trim().replace(/^https?:\/\//i, "")]
         : [];
+      const environment = envRowsToEnvironment(state.envRows);
       const created = await createComputeInstance({
         name: state.instanceName.trim(),
         dockerImage: tpl.dockerImage,
@@ -134,6 +146,7 @@ export function ProvisionEnvironmentWizard({
         cpuMillicores,
         internalPort: state.internalPort,
         traefikHosts: hosts,
+        ...(environment ? { environment } : {}),
       });
       setCreatedId(created.instance.id);
       setDeployJobId(created.jobId);

@@ -305,6 +305,8 @@ export type ComputeInstance = {
   memoryMb: number;
   cpuMillicores: number;
   traefikHosts: string[];
+  /** Variáveis injectadas no contentor (`KEY` → valor string). */
+  environment?: Record<string, string>;
   status: ComputeInstanceStatusNormalized;
   nerdctlContainerName?: string | null;
   agentId?: string | null;
@@ -343,6 +345,7 @@ export async function createComputeInstance(payload: {
   /** Porta do processo no contentor (padrão 80). Obrigatório alinhar com a imagem. */
   internalPort?: number;
   traefikHosts?: string[];
+  environment?: Record<string, string>;
 }): Promise<ComputeInstanceCreated> {
   const raw = await apiFetch<{ instance: ComputeInstanceWire; jobId: string }>(
     COMPUTE_INSTANCES_BASE,
@@ -378,6 +381,8 @@ export async function patchComputeInstance(
     cpuMillicores?: number;
     internalPort?: number;
     traefikHosts?: string[];
+    /** Substituição total do mapa de env no contentor (objeto string→string). */
+    environment?: Record<string, string>;
   },
 ): Promise<ComputeInstanceCreated> {
   const raw = await apiFetch<{ instance: ComputeInstanceWire; jobId: string }>(
@@ -514,6 +519,7 @@ export async function createManagedServerInstance(payload: {
   internalPort?: number;
   memoryMb?: number;
   cpuMillicores?: number;
+  environment?: Record<string, string>;
 }): Promise<ComputeInstanceCreated> {
   const raw = await apiFetch<{ instance: ComputeInstanceWire; jobId: string }>(
     MANAGED_SERVER_INSTANCES_BASE,
