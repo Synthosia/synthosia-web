@@ -11,6 +11,7 @@ import {
   PanelFilesIcon,
   PanelSettingsIcon,
   PanelSitesIcon,
+  RocketIcon,
   ShieldIcon,
 } from "@/components/auth-icons";
 
@@ -61,6 +62,12 @@ export function panelNavSections(category: PanelCategory): PanelNavSection[] {
           id: "srv-res",
           label: "RESOURCES",
           items: [
+            {
+              id: "srv-provision-wizard",
+              label: "New environment",
+              hint: "Guided wizard — online in minutes",
+              icon: RocketIcon,
+            },
             { id: "srv-instances", label: "All Servers", icon: PanelSitesIcon },
             { id: "srv-networking", label: "Networking", icon: NavNetworkingIcon },
           ],

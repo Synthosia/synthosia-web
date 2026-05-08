@@ -56,6 +56,28 @@ export function CloudIcon({ className = "size-4" }: IconProps) {
   );
 }
 
+/** Assistente de novo ambiente / provisionamento guiado. */
+export function RocketIcon({ className = "size-4" }: IconProps) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none">
+      <path
+        d="M12 2.5c1.8 3.2 2.5 5.9 2.5 8.5m0 0c0 2.1-.4 4.2-1.1 6.2M14.5 11c3 .4 5.5 1.3 7.5 2.8-1.3 1.5-3 2.6-5 3.2m-8 4.5c-2-1.8-3.2-4.3-3.5-7m7.5 2.8c-1.5 2.8-3.8 5-6.8 6.5"
+        stroke="currentColor"
+        strokeWidth="1.65"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 14.5 7 22l2.5-2 2 1.5-1-5"
+        stroke="currentColor"
+        strokeWidth="1.65"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function ProjectIcon({ className = "size-4" }: IconProps) {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none">

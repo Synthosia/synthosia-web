@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { useLanguage } from "@/components/language-provider";
 import { cn } from "@/lib/cn";
@@ -12,13 +12,13 @@ import {
   mapComputeInstanceToRow,
   type ServerRow,
 } from "@/components/server-row-types";
+import { infraMetricsStream, snapshotToConsoleLiveMetric } from "@/lib/infra-metrics-stream";
 import {
   ApiClientError,
   type ConsoleDashboard,
   type ComputeInstance,
   type ServerInstance,
   deleteComputeInstance,
-  getConsoleDashboard,
   listComputeInstances,
   listServerInstances,
 } from "@/lib/synthosia-api";
@@ -176,12 +176,14 @@ export function ServerMonitoringDashboard({
   cloudBindingId,
   onNavigateCloud,
   onOpenCloudDetail,
+  onOpenGuidedProvision,
 }: {
   session: AccountSession;
   dashboard: ConsoleDashboard | null;
   cloudBindingId: string | null;
   onNavigateCloud: (bindingId: string | null) => void;
   onOpenCloudDetail: (bindingId: string) => void;
+  onOpenGuidedProvision: () => void;
 }) {
   const { dictionary } = useLanguage();
   const sm = dictionary.panel.serverMonitoring;
@@ -190,17 +192,42 @@ export function ServerMonitoringDashboard({
   const zeros = useMemo(() => Array.from({ length: 24 }, () => 0), []);
 
   const [dashPoll, setDashPoll] = useState<ConsoleDashboard | null>(null);
+  const dashboardRef = useRef(dashboard);
+  dashboardRef.current = dashboard;
+
   useEffect(() => {
     setDashPoll(dashboard);
   }, [dashboard]);
 
+  /** Métricas live da frota: WebSocket `metrics-stream` (subscribe fleet); séries agregadas continuam no HTTP ao carregar. */
   useEffect(() => {
-    const id = window.setInterval(() => {
-      void getConsoleDashboard()
-        .then(setDashPoll)
-        .catch(() => {});
-    }, 12000);
-    return () => window.clearInterval(id);
+    const unsub = infraMetricsStream.subscribeFleet((msg) => {
+      if (msg.type === "fleetSnapshot") {
+        const live = msg.instances
+          .map((row) => snapshotToConsoleLiveMetric(row.instanceId, row.snapshot))
+          .filter((x): x is NonNullable<typeof x> => x != null);
+        setDashPoll((prev) => {
+          const base = prev ?? dashboardRef.current;
+          if (!base) return prev;
+          return { ...base, instanceLiveMetrics: live };
+        });
+        return;
+      }
+      if (msg.type === "instanceUpdate") {
+        const m = snapshotToConsoleLiveMetric(msg.instanceId, msg.snapshot);
+        if (!m) return;
+        setDashPoll((prev) => {
+          const base = prev ?? dashboardRef.current;
+          if (!base) return prev;
+          const arr = [...(base.instanceLiveMetrics ?? [])];
+          const idx = arr.findIndex((x) => x.instanceId === m.instanceId);
+          if (idx >= 0) arr[idx] = m;
+          else arr.push(m);
+          return { ...base, instanceLiveMetrics: arr };
+        });
+      }
+    });
+    return unsub;
   }, []);
 
   const dashEffective = dashPoll ?? dashboard;
@@ -297,7 +324,7 @@ export function ServerMonitoringDashboard({
   /** Sincroniza lista SSH + instâncias compute. */
   useEffect(() => {
     let cancelled = false;
-    const intervalMs = 8000;
+    const intervalMs = 60_000;
 
     const tick = async () => {
       if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
@@ -416,6 +443,13 @@ export function ServerMonitoringDashboard({
           <FilterPill label={sm.filterAllRegions} />
           <FilterPill label={sm.filterAllStates} />
           <FilterPill label={sm.filterSilenced} />
+          <button
+            type="button"
+            onClick={onOpenGuidedProvision}
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-violet-200 bg-violet-50 px-3 text-sm font-semibold text-violet-900 shadow-sm transition hover:bg-violet-100 dark:border-violet-500/30 dark:bg-violet-950/40 dark:text-violet-100 dark:hover:bg-violet-950/70"
+          >
+            {smRecord.guidedProvisionCta ?? "Assistente"}
+          </button>
           <button
             type="button"
             onClick={() => setModalKind("new")}

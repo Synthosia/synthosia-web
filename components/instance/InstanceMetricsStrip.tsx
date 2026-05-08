@@ -86,7 +86,7 @@ export function InstanceMetricsStrip({
   };
 }) {
   const { data, loading } = useCloudInstanceMetrics(bindingId, 24);
-  const { data: latest } = useCloudInstanceMetricsLatest(bindingId, 10_000);
+  const { data: latest } = useCloudInstanceMetricsLatest(bindingId, 0);
   const { cpuPct, memPct, netMbps } = extractMetricSeries(data);
   const lim = parseLimits(null);
 

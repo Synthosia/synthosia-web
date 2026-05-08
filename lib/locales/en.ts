@@ -1,3 +1,5 @@
+import { provisionWizardEn } from "@/lib/provision-wizard/i18n";
+
 const en = {
   language: {
     label: "Language",
@@ -167,6 +169,10 @@ const en = {
       "dash-overview": {
         title: "Overview",
         hint: "Metrics, charts, and previews",
+      },
+      "srv-provision-wizard": {
+        title: "New environment",
+        hint: "Guided wizard — online in minutes",
       },
       "srv-instances": { title: "All Servers" },
       "srv-instance-detail": {
@@ -575,7 +581,9 @@ const en = {
       accessActivityLoadMore: "Load more",
       accessActivityRefresh: "Refresh",
       accessActivityLoadError: "Could not load HTTP access log.",
+      guidedProvisionCta: "Cloud wizard",
     },
+    provisionWizard: provisionWizardEn,
   },
   docs: {
     onboardingEyebrow: "Documentation onboarding",

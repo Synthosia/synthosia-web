@@ -22,6 +22,7 @@ import { AccountShellSkeleton } from "@/components/account-shell-skeleton";
 import { BrandLogo } from "@/components/brand-logo";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useLanguage } from "@/components/language-provider";
+import { ProvisionEnvironmentWizard } from "@/components/provision-wizard/provision-environment-wizard";
 import { ServerInstanceDetailPage } from "@/components/server-instance-detail-page";
 import { ServerMonitoringDashboard } from "@/components/server-monitoring-dashboard";
 import { DatabaseMonitoringDashboard } from "@/components/database-monitoring-dashboard";
@@ -85,8 +86,10 @@ export function AccountWorkspace({
   const sidebarActiveId = activeNav === "srv-instance-detail" ? "srv-instances" : activeNav;
 
   const replacePanelUrl = useCallback(
-    (cat: PanelCategory, section: string, cloud?: string | null) => {
-      router.replace(buildAccountPanelHref(cat, section, cloud ?? undefined), { scroll: false });
+    (cat: PanelCategory, section: string, cloud?: string | null, view?: InstanceDetailTab | null) => {
+      router.replace(buildAccountPanelHref(cat, section, cloud ?? undefined, view ?? undefined), {
+        scroll: false,
+      });
     },
     [router],
   );
@@ -264,7 +267,8 @@ export function AccountWorkspace({
               activeCategory === "servers" &&
                 (activeNav === "srv-instances" ||
                   activeNav === "srv-networking" ||
-                  activeNav === "srv-instance-detail")
+                  activeNav === "srv-instance-detail" ||
+                  activeNav === "srv-provision-wizard")
                 ? "max-w-[1600px]"
                 : (activeCategory !== "dashboard" && activeCategory !== "databases") ? "max-w-6xl" : "",
             )}
@@ -298,6 +302,11 @@ export function AccountWorkspace({
                 onOpenCloudDetail={(bindingId) =>
                   replacePanelUrl("servers", "srv-instance-detail", bindingId)
                 }
+                onProvisionComplete={(instanceId) =>
+                  replacePanelUrl("servers", "srv-instance-detail", instanceId, "stream")
+                }
+                onProvisionCancel={() => replacePanelUrl("servers", "srv-instances", null)}
+                onOpenGuidedProvision={() => replacePanelUrl("servers", "srv-provision-wizard", null)}
               />
             </motion.div>
           </div>
@@ -317,6 +326,9 @@ function AccountPanelMain({
   onNavigateCloud,
   onBackToServerList,
   onOpenCloudDetail,
+  onProvisionComplete,
+  onProvisionCancel,
+  onOpenGuidedProvision,
 }: {
   category: PanelCategory;
   activeNav: string;
@@ -327,6 +339,9 @@ function AccountPanelMain({
   onNavigateCloud: (bindingId: string | null) => void;
   onBackToServerList: () => void;
   onOpenCloudDetail: (bindingId: string) => void;
+  onProvisionComplete: (instanceId: string) => void;
+  onProvisionCancel: () => void;
+  onOpenGuidedProvision: () => void;
 }) {
   const { dictionary } = useLanguage();
   const ph = dictionary.panel.placeholders;
@@ -347,6 +362,16 @@ function AccountPanelMain({
         cloudBindingId={cloudBindingId}
         onNavigateCloud={onNavigateCloud}
         onOpenCloudDetail={onOpenCloudDetail}
+        onOpenGuidedProvision={onOpenGuidedProvision}
+      />
+    );
+  }
+  if (category === "servers" && activeNav === "srv-provision-wizard") {
+    return (
+      <ProvisionEnvironmentWizard
+        session={session}
+        onCancel={onProvisionCancel}
+        onComplete={onProvisionComplete}
       />
     );
   }

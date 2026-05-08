@@ -234,6 +234,15 @@ export function computeInstanceMetricsWebSocketUrl(computeInstanceId: string): s
   return `${ws.replace(/\/$/, "")}${path}`;
 }
 
+/** WebSocket unificado: subscribe `fleet` ou `instance` (`/metrics-stream`). */
+export function infraMetricsStreamWebSocketUrl(): string {
+  const base = API_URL.trim();
+  const ws =
+    base.startsWith("https://") ? `wss://${base.slice("https://".length)}` : `ws://${base.slice("http://".length)}`;
+  const path = "/v1/infrastructure/metrics-stream";
+  return `${ws.replace(/\/$/, "")}${path}`;
+}
+
 /** SSE durante o job de provision (linhas `log` + `done`). */
 export function jobProvisioningEventsUrl(jobId: string): string {
   return `${API_URL}/v1/infrastructure/jobs/${encodeURIComponent(jobId)}/events`;

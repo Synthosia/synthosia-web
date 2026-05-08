@@ -1,3 +1,5 @@
+import { provisionWizardPtBR } from "@/lib/provision-wizard/i18n";
+
 const ptBR = {
   language: {
     label: "Idioma",
@@ -167,6 +169,10 @@ const ptBR = {
       "dash-overview": {
         title: "Visão geral",
         hint: "Métricas, gráficos e pré-visualizações",
+      },
+      "srv-provision-wizard": {
+        title: "Novo ambiente",
+        hint: "Assistente guiado — projeto online em minutos",
       },
       "srv-instances": { title: "Todos os servidores" },
       "srv-instance-detail": {
@@ -579,7 +585,9 @@ const ptBR = {
       accessActivityLoadMore: "Carregar mais",
       accessActivityRefresh: "Atualizar",
       accessActivityLoadError: "Não foi possível carregar o registo HTTP.",
+      guidedProvisionCta: "Assistente cloud",
     },
+    provisionWizard: provisionWizardPtBR,
   },
   docs: {
     onboardingEyebrow: "Introdução à documentação",
