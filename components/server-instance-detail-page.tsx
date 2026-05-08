@@ -7,6 +7,7 @@ import { CloudServiceConfigForm } from "@/components/cloud-service-config-form";
 import { CloudServiceStreamPanels } from "@/components/cloud-service-stream-panels";
 import { InstanceActionsSidebar } from "@/components/instance/InstanceActionsSidebar";
 import { InstanceMetricsStrip } from "@/components/instance/InstanceMetricsStrip";
+import { InstanceAccessActivityPanel } from "@/components/instance/instance-access-activity";
 import { InstanceAuditPeersPollPanel } from "@/components/instance/instance-audit-peers";
 import { InstanceMonitoringCharts } from "@/components/instance/InstanceMonitoringCharts";
 import { useLanguage } from "@/components/language-provider";
@@ -197,6 +198,10 @@ export function ServerInstanceDetailPage({
       diskHint: sm.instanceDetailMetricLimitsHint,
       lastWindow: sm.last24h,
       loading: sm.instanceMonitoringLoading,
+      telemetryLiveTitle: sm.instanceMetricsLiveTelemetryTitle,
+      telemetryHttp: sm.streamPanelHttpProbe,
+      telemetryMem: sm.streamPanelContainerMem,
+      telemetryRecorded: sm.streamPanelSampleRecorded,
     }),
     [sm],
   );
@@ -228,6 +233,25 @@ export function ServerInstanceDetailPage({
       colConnections: sm.auditPeersColConnections,
       empty: sm.auditPeersEmpty,
       recordedAtTemplate: sm.auditPeersRecordedAt,
+    }),
+    [sm],
+  );
+
+  const accessActivityLabels = useMemo(
+    () => ({
+      panelTitle: sm.accessActivityTitle,
+      panelSubtitle: sm.accessActivitySubtitle,
+      hintTraefik: sm.accessActivityHintTraefik,
+      colTime: sm.accessActivityColTime,
+      colRequest: sm.accessActivityColRequest,
+      colStatus: sm.accessActivityColStatus,
+      colLatency: sm.accessActivityColLatency,
+      colHost: sm.accessActivityColHost,
+      colClient: sm.accessActivityColClient,
+      empty: sm.accessActivityEmpty,
+      loadMore: sm.accessActivityLoadMore,
+      refresh: sm.accessActivityRefresh,
+      loadError: sm.accessActivityLoadError,
     }),
     [sm],
   );
@@ -453,6 +477,7 @@ export function ServerInstanceDetailPage({
               <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                 <InstanceMonitoringCharts bindingId={cloudBindingId} labels={monitoringLabels} />
               </div>
+              <InstanceAccessActivityPanel bindingId={cloudBindingId} labels={accessActivityLabels} />
               <InstanceAuditPeersPollPanel bindingId={cloudBindingId} labels={auditPeersPollLabels} />
             </div>
           ) : null}

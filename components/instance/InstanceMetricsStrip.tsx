@@ -8,8 +8,10 @@ import {
   parseLimits,
 } from "@/components/instance/cloud-metrics";
 import { useCloudInstanceMetrics } from "@/components/instance/use-cloud-instance-metrics";
+import { useCloudInstanceMetricsLatest } from "@/components/instance/use-cloud-instance-metrics-latest";
 import { cn } from "@/lib/cn";
 import type { ComputeInstance } from "@/lib/synthosia-api";
+import { formatContainerMem, formatHttpProbeSummary } from "@/lib/telemetry-display";
 
 function MetricCard({
   title,
@@ -77,9 +79,14 @@ export function InstanceMetricsStrip({
     diskHint: string;
     lastWindow: string;
     loading: string;
+    telemetryLiveTitle: string;
+    telemetryHttp: string;
+    telemetryMem: string;
+    telemetryRecorded: string;
   };
 }) {
   const { data, loading } = useCloudInstanceMetrics(bindingId, 24);
+  const { data: latest } = useCloudInstanceMetricsLatest(bindingId, 10_000);
   const { cpuPct, memPct, netMbps } = extractMetricSeries(data);
   const lim = parseLimits(null);
 
@@ -93,7 +100,14 @@ export function InstanceMetricsStrip({
   const diskPrimary = `${service.memoryMb} MB / ${service.cpuMillicores} mCPU`;
   const diskSecondary = labels.diskHint;
 
+  const extras = latest?.extras ?? {};
+  const httpProbe = extras.httpProbe;
+  const container = extras.container;
+  const probeSummary = formatHttpProbeSummary(httpProbe);
+  const memUsage = formatContainerMem(container);
+
   return (
+    <div className="space-y-4">
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <MetricCard
         title={labels.cpu}
@@ -150,6 +164,37 @@ export function InstanceMetricsStrip({
           {data?.windowHours != null ? ` · ${data.windowHours}h` : ""}
         </p>
       </motion.article>
+    </div>
+      {(probeSummary || memUsage || latest?.recordedAt) && (
+        <motion.section
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] px-4 py-3 text-xs text-[var(--text-secondary)]"
+        >
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            {labels.telemetryLiveTitle}
+          </p>
+          {latest?.recordedAt ? (
+            <p className="mt-1 text-[11px]">
+              <span className="text-[var(--text-muted)]">{labels.telemetryRecorded}: </span>
+              {new Date(latest.recordedAt).toLocaleString()}
+            </p>
+          ) : null}
+          {probeSummary ? (
+            <p className="mt-1">
+              <span className="text-[var(--text-muted)]">{labels.telemetryHttp}: </span>
+              <span className="font-medium text-[var(--text-primary)]">{probeSummary}</span>
+            </p>
+          ) : null}
+          {memUsage ? (
+            <p className="mt-1">
+              <span className="text-[var(--text-muted)]">{labels.telemetryMem}: </span>
+              <span className="font-mono text-[11px] text-[var(--text-primary)]">{memUsage}</span>
+            </p>
+          ) : null}
+        </motion.section>
+      )}
     </div>
   );
 }

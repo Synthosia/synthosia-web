@@ -1,10 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/components/language-provider";
 import { cn } from "@/lib/cn";
 import { AuditPeersTable } from "@/components/instance/instance-audit-peers";
+import { useInstanceMetricsWebSocket } from "@/components/instance/use-instance-metrics-ws";
 import { cloudManagedServiceStreamUrl } from "@/lib/synthosia-api";
+import { formatContainerMem, formatHttpProbeSummary } from "@/lib/telemetry-display";
+
+type MetricsLiveSample = {
+  recordedAt?: string;
+  recordedAtMs?: number;
+  cpuPercent?: number;
+  memoryPercent?: number;
+  networkInMbps?: number;
+  networkOutMbps?: number;
+  httpProbe?: unknown;
+  container?: unknown;
+  telemetryVersion?: unknown;
+};
 
 type CloudServiceSseSnapshot = {
   railwayMissing?: boolean;
@@ -15,6 +29,7 @@ type CloudServiceSseSnapshot = {
     networkInMbps?: { ts?: number; value?: number };
     networkOutMbps?: { ts?: number; value?: number };
     telemetryExtras?: Record<string, unknown>;
+    liveSample?: MetricsLiveSample | null;
   };
   runtime?: {
     containerOsHint?: string;
@@ -69,6 +84,26 @@ export function CloudServiceStreamPanels({
 
   const runtimeBottom = useRef<HTMLDivElement>(null);
   const buildBottom = useRef<HTMLDivElement>(null);
+
+  const mergeWsSnapshot = useCallback((incoming: Record<string, unknown>) => {
+    setSnap((prev) => {
+      const base = { ...(prev ?? {}) } as CloudServiceSseSnapshot;
+      const incMetrics = incoming.metrics as CloudServiceSseSnapshot["metrics"] | undefined;
+      return {
+        ...base,
+        ...(incoming as Partial<CloudServiceSseSnapshot>),
+        metrics: {
+          ...base.metrics,
+          ...incMetrics,
+        },
+      };
+    });
+  }, []);
+
+  const { status: metricsWsStatus } = useInstanceMetricsWebSocket(
+    cloudBindingId ?? undefined,
+    mergeWsSnapshot,
+  );
 
   useEffect(() => {
     if (!cloudBindingId || railwayMissing) {
@@ -169,6 +204,13 @@ export function CloudServiceStreamPanels({
     typeof auditRaw?.establishedFlows === "number" ? auditRaw.establishedFlows : null;
   const auditPeerSlots = Array.isArray(auditRaw?.remotePeers) ? auditRaw.remotePeers.length : null;
 
+  const live = snap?.metrics?.liveSample;
+  const tx = snap?.metrics?.telemetryExtras;
+  const httpProbeRaw = live?.httpProbe ?? tx?.httpProbe;
+  const containerRaw = live?.container ?? tx?.container;
+  const probeSummary = formatHttpProbeSummary(httpProbeRaw);
+  const containerMem = formatContainerMem(containerRaw);
+
   const cpuLabel =
     cpu != null ? `${cpu <= 1 && cpu >= 0 ? Math.round(cpu * 100) : Math.round(cpu)}%` : "—";
   const memLabel = mem != null ? `${mem < 32 ? mem.toFixed(2) : Math.round(mem)} GB` : "—";
@@ -230,21 +272,42 @@ export function CloudServiceStreamPanels({
             >
               {sm.streamPanelStatus}
             </h2>
-            <span
-              className={cn(
-                "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
-                streamState === "live" && "bg-emerald-100 text-emerald-900",
-                streamState === "idle" &&
-                  (gcp ? "bg-[var(--surface-raised)] text-[var(--text-secondary)]" : "bg-sky-100 text-sky-900"),
-                streamState === "error" && "bg-amber-100 text-amber-950",
-              )}
-            >
-              {streamState === "live"
-                ? sm.liveStreamLive
-                : streamState === "error"
-                  ? sm.liveStreamError
-                  : sm.liveStreamConnecting}
-            </span>
+            <div className="flex flex-wrap items-center justify-end gap-1.5">
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+                  metricsWsStatus === "live" && "bg-violet-100 text-violet-900",
+                  metricsWsStatus === "connecting" && "bg-slate-100 text-slate-700",
+                  metricsWsStatus === "error" && "bg-rose-50 text-rose-900",
+                  metricsWsStatus === "idle" &&
+                    (gcp ? "bg-[var(--surface-raised)] text-[var(--text-muted)]" : "bg-gray-100 text-gray-600"),
+                )}
+                title={sm.metricsWsHint ?? "WebSocket: push quando o agente grava métricas na API"}
+              >
+                {metricsWsStatus === "live"
+                  ? sm.metricsWsLive ?? "WS métricas"
+                  : metricsWsStatus === "connecting"
+                    ? sm.metricsWsConnecting ?? "WS…"
+                    : metricsWsStatus === "error"
+                      ? sm.metricsWsError ?? "WS erro"
+                      : "WS"}
+              </span>
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+                  streamState === "live" && "bg-emerald-100 text-emerald-900",
+                  streamState === "idle" &&
+                    (gcp ? "bg-[var(--surface-raised)] text-[var(--text-secondary)]" : "bg-sky-100 text-sky-900"),
+                  streamState === "error" && "bg-amber-100 text-amber-950",
+                )}
+              >
+                {streamState === "live"
+                  ? sm.liveStreamLive
+                  : streamState === "error"
+                    ? sm.liveStreamError
+                    : sm.liveStreamConnecting}
+              </span>
+            </div>
           </div>
           <div
             className={cn(
@@ -321,6 +384,42 @@ export function CloudServiceStreamPanels({
                 {auditLabel}
               </p>
             ) : null}
+            {live?.recordedAt ? (
+              <p className="mt-2 text-[10px] text-[var(--text-muted)]">
+                {(sm as Record<string, string>).streamPanelSampleRecorded ?? "BD"}: {live.recordedAt}
+              </p>
+            ) : null}
+            {(probeSummary || containerMem) && (
+              <div
+                className={cn(
+                  "mt-3 space-y-1 rounded-md px-2 py-2 text-[11px]",
+                  gcp
+                    ? "border border-[var(--border-subtle)] bg-[var(--surface-raised)]"
+                    : "border border-cyan-100/80 bg-white/90",
+                )}
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                  {(sm as Record<string, string>).instanceMetricsLiveTelemetryTitle ??
+                    "Telemetria (extras)"}
+                </p>
+                {probeSummary ? (
+                  <p className="text-[var(--text-primary)]">
+                    <span className="text-[var(--text-muted)]">
+                      {(sm as Record<string, string>).streamPanelHttpProbe ?? "HTTP"}:{" "}
+                    </span>
+                    {probeSummary}
+                  </p>
+                ) : null}
+                {containerMem ? (
+                  <p className="font-mono text-[11px] text-[var(--text-primary)]">
+                    <span className="font-sans text-[var(--text-muted)]">
+                      {(sm as Record<string, string>).streamPanelContainerMem ?? "Mem"}:{" "}
+                    </span>
+                    {containerMem}
+                  </p>
+                ) : null}
+              </div>
+            )}
             {snap?.metrics?.telemetryExtras?.audit ? (
               <AuditPeersTable
                 variant="embedded"

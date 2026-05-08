@@ -24,7 +24,6 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { useLanguage } from "@/components/language-provider";
 import { ServerInstanceDetailPage } from "@/components/server-instance-detail-page";
 import { ServerMonitoringDashboard } from "@/components/server-monitoring-dashboard";
-import { ServerNetworkDashboard } from "@/components/server-network-dashboard";
 import { DatabaseMonitoringDashboard } from "@/components/database-monitoring-dashboard";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { type AccountSession } from "@/lib/account-session";
@@ -364,7 +363,10 @@ function AccountPanelMain({
     );
   }
   if (category === "servers" && activeNav === "srv-networking") {
-    return <ServerNetworkDashboard session={session} dashboard={consoleDashboard} />;
+    const nr = dictionary.panel.placeholders.networkingRetired;
+    return (
+      <PanelPlaceholder title={nr.title} description={nr.description} showAction={false} />
+    );
   }
   if (category === "databases") {
     return <DatabaseMonitoringDashboard session={session} dashboard={consoleDashboard} />;

@@ -18,9 +18,11 @@ import {
   type ComputeInstance,
   type ServerInstance,
   deleteComputeInstance,
+  getConsoleDashboard,
   listComputeInstances,
   listServerInstances,
 } from "@/lib/synthosia-api";
+import { formatContainerMem, formatHttpProbeSummary } from "@/lib/telemetry-display";
 
 function stableMetricsFromId(id: string): Pick<ServerRow, "cpu" | "ram" | "disk"> {
   let h = 0;
@@ -147,6 +149,27 @@ function fillTemplate(template: string, vars: Record<string, string | number>) {
   return template.replace(/\{(\w+)\}/g, (_, key) => String(vars[key] ?? ""));
 }
 
+function mergeDashboardLiveMetrics(
+  servers: ServerRow[],
+  live: ConsoleDashboard["instanceLiveMetrics"],
+): ServerRow[] {
+  if (!live?.length) return servers;
+  const map = new Map(live.map((x) => [x.instanceId, x]));
+  return servers.map((s) => {
+    if (!s.managedCompute) return s;
+    const L = map.get(s.managedCompute.id);
+    if (!L) return s;
+    return {
+      ...s,
+      liveCpuPercent: L.cpuPercent ?? null,
+      liveMemoryPercent: L.memoryPercent ?? null,
+      liveHttpProbeSummary: formatHttpProbeSummary(L.httpProbe),
+      liveContainerMemUsage: formatContainerMem(L.container),
+      liveMetricRecordedAt: L.recordedAt,
+    };
+  });
+}
+
 export function ServerMonitoringDashboard({
   session,
   dashboard,
@@ -165,6 +188,22 @@ export function ServerMonitoringDashboard({
   const smRecord = sm as Record<string, string>;
   const m = dashboard?.metrics;
   const zeros = useMemo(() => Array.from({ length: 24 }, () => 0), []);
+
+  const [dashPoll, setDashPoll] = useState<ConsoleDashboard | null>(null);
+  useEffect(() => {
+    setDashPoll(dashboard);
+  }, [dashboard]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      void getConsoleDashboard()
+        .then(setDashPoll)
+        .catch(() => {});
+    }, 12000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const dashEffective = dashPoll ?? dashboard;
 
   const [cloudChartSeries, setCloudChartSeries] = useState<{
     cpu: number[];
@@ -361,8 +400,13 @@ export function ServerMonitoringDashboard({
     [canManage, lifecycleBusy, sm.actionDelete, runDeleteBinding],
   );
 
-  const prod = useMemo(() => servers.filter((s) => s.env === "production"), [servers]);
-  const stg = useMemo(() => servers.filter((s) => s.env === "staging"), [servers]);
+  const serversLive = useMemo(
+    () => mergeDashboardLiveMetrics(servers, dashEffective?.instanceLiveMetrics),
+    [servers, dashEffective?.instanceLiveMetrics],
+  );
+
+  const prod = useMemo(() => serversLive.filter((s) => s.env === "production"), [serversLive]);
+  const stg = useMemo(() => serversLive.filter((s) => s.env === "staging"), [serversLive]);
 
   return (
     <div className="flex min-h-0 flex-col gap-6">
@@ -490,6 +534,11 @@ export function ServerMonitoringDashboard({
                 miniRam={sm.miniRam}
                 miniDisk={sm.miniDisk}
                 cloudCardHint={smRecord.cardCloudMetricsHint}
+                telemetryLabels={{
+                  httpProbe: smRecord.streamPanelHttpProbe ?? "HTTP",
+                  containerMem: smRecord.streamPanelContainerMem ?? "Memória",
+                  recordedAt: smRecord.streamPanelSampleRecorded ?? "Amostra",
+                }}
                 cloudActions={cloudCardActions}
               />
               <ServerGroup
@@ -507,6 +556,11 @@ export function ServerMonitoringDashboard({
                 miniRam={sm.miniRam}
                 miniDisk={sm.miniDisk}
                 cloudCardHint={smRecord.cardCloudMetricsHint}
+                telemetryLabels={{
+                  httpProbe: smRecord.streamPanelHttpProbe ?? "HTTP",
+                  containerMem: smRecord.streamPanelContainerMem ?? "Memória",
+                  recordedAt: smRecord.streamPanelSampleRecorded ?? "Amostra",
+                }}
                 cloudActions={cloudCardActions}
               />
             </>
@@ -607,6 +661,7 @@ function ServerGroup({
   miniRam,
   miniDisk,
   cloudCardHint,
+  telemetryLabels,
   cloudActions,
 }: {
   label: string;
@@ -623,6 +678,7 @@ function ServerGroup({
   miniRam: string;
   miniDisk: string;
   cloudCardHint: string;
+  telemetryLabels: { httpProbe: string; containerMem: string; recordedAt: string };
   cloudActions: CloudCardActionsBundle;
 }) {
   if (servers.length === 0) return null;
@@ -688,9 +744,45 @@ function ServerGroup({
               {s.managedCompute ? (
                 <div className="flex w-full min-w-0 flex-col gap-2 sm:w-56">
                   <p className="text-[10px] text-gray-400 sm:text-right">{cloudCardHint}</p>
+                  {s.liveMetricRecordedAt ? (
+                    <p className="text-[9px] text-gray-400 sm:text-right">
+                      {telemetryLabels.recordedAt}:{" "}
+                      {new Date(s.liveMetricRecordedAt).toLocaleString(undefined, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })}
+                    </p>
+                  ) : null}
+                  {s.liveHttpProbeSummary ? (
+                    <p className="text-[10px] font-medium text-violet-800 sm:text-right">
+                      <span className="text-gray-500">{telemetryLabels.httpProbe}: </span>
+                      {s.liveHttpProbeSummary}
+                    </p>
+                  ) : null}
+                  {s.liveContainerMemUsage ? (
+                    <p className="text-[10px] text-gray-700 sm:text-right">
+                      <span className="text-gray-500">{telemetryLabels.containerMem}: </span>
+                      {s.liveContainerMemUsage}
+                    </p>
+                  ) : null}
                   <div className="flex flex-col gap-1 border-t border-gray-100 pt-2">
-                    <MiniProgress value={null} label={miniCpu} />
-                    <MiniProgress value={null} label={miniRam} />
+                    <MiniProgress
+                      value={
+                        s.liveCpuPercent != null && Number.isFinite(s.liveCpuPercent)
+                          ? Math.round(Math.min(100, s.liveCpuPercent))
+                          : null
+                      }
+                      label={miniCpu}
+                    />
+                    <MiniProgress
+                      value={
+                        s.liveMemoryPercent != null && Number.isFinite(s.liveMemoryPercent)
+                          ? Math.round(Math.min(100, s.liveMemoryPercent))
+                          : null
+                      }
+                      label={miniRam}
+                    />
                   </div>
                   <div
                     className="flex flex-wrap gap-1.5 border-t border-gray-100 pt-2 sm:justify-end"

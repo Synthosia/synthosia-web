@@ -384,6 +384,8 @@ function NewServerModal({
   const [environment, setEnvironment] = useState("production");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  /** Fluxo cloud em passos (onboarding). SSH mantém formulário único. */
+  const [cloudWizardStep, setCloudWizardStep] = useState(1);
   const [githubRepos, setGithubRepos] = useState<GithubRepository[] | null>(null);
   const [githubLoading, setGithubLoading] = useState(false);
   const [githubTried, setGithubTried] = useState(false);
@@ -491,6 +493,10 @@ function NewServerModal({
     setMemoryGb(p.mem);
     setVcpus(p.vcpu);
   }, []);
+
+  useEffect(() => {
+    if (tab === "cloud") setCloudWizardStep(1);
+  }, [tab]);
 
   useEffect(() => {
     if (tab !== "cloud") return;
@@ -642,10 +648,54 @@ function NewServerModal({
       setPort("22");
       setDeployMode("image");
       setAppProfile("custom");
+      setCloudWizardStep(1);
     } catch (e) {
       setMsg(e instanceof ApiClientError ? e.message : t.modalError!);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const tryAdvanceCloudWizard = () => {
+    setMsg(null);
+    if (cloudWizardStep === 1) {
+      const n = name.trim();
+      if (!n) {
+        setMsg(t.modalNameRequired!);
+        return;
+      }
+      if (deployMode === "image") {
+        if (!dockerImage.trim()) {
+          setMsg(t.modalCloudImageRequired!);
+          return;
+        }
+      } else if (!sourceRepo.trim()) {
+        setMsg(t.modalCloudSourceRequired!);
+        return;
+      }
+      setCloudWizardStep(2);
+      return;
+    }
+    if (cloudWizardStep === 2) {
+      const pRaw = internalPort.trim();
+      const pNum = pRaw ? Number(pRaw) : 80;
+      const internalOk =
+        Number.isFinite(pNum) && Number.isInteger(pNum) && pNum >= 1 && pNum <= 65535;
+      if (!internalOk) {
+        setMsg("Porta interna inválida (use 1–65535, ex.: 80 ou 8080).");
+        return;
+      }
+      const mRaw = memoryGb.trim();
+      const vRaw = vcpus.trim();
+      if (mRaw && Number.isNaN(Number(mRaw))) {
+        setMsg(t.modalConfigLimitsNeedOne!);
+        return;
+      }
+      if (vRaw && Number.isNaN(Number(vRaw))) {
+        setMsg(t.modalConfigLimitsNeedOne!);
+        return;
+      }
+      setCloudWizardStep(3);
     }
   };
 
@@ -658,7 +708,7 @@ function NewServerModal({
       subtitle={t.modalNewSubtitle!}
       onClose={onClose}
       closeLabel={t.modalClose!}
-      maxWidthClassName="max-w-2xl"
+      maxWidthClassName="max-w-3xl"
     >
       {!canManage ? (
         <p className="text-sm text-amber-800">{t.modalViewerHint!}</p>
@@ -713,15 +763,49 @@ function NewServerModal({
           </label>
 
           {tab === "cloud" ? (
-            <p className="rounded-lg bg-cyan-50/90 px-3 py-2 text-[11px] leading-snug text-cyan-950 ring-1 ring-cyan-100">
-              O URL público HTTPS é atribuído automaticamente pela plataforma (subdomínio único). Indique só a{" "}
-              <strong>porta interna</strong> em que o seu serviço escuta dentro da imagem Docker.
-            </p>
+            <div className="rounded-xl border border-slate-200/80 bg-[#fafafa] p-3 shadow-sm">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                {t.onboardingWizardEyebrow}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {(
+                  [
+                    [1, t.onboardingStepStack],
+                    [2, t.onboardingStepCapacity],
+                    [3, t.onboardingStepReview],
+                  ] as const
+                ).map(([stepNum, label]) => (
+                  <button
+                    key={stepNum}
+                    type="button"
+                    onClick={() => stepNum <= cloudWizardStep && setCloudWizardStep(stepNum)}
+                    disabled={stepNum > cloudWizardStep}
+                    className={cn(
+                      "min-h-[52px] min-w-[100px] flex-1 rounded-xl border px-3 py-2 text-left transition",
+                      cloudWizardStep === stepNum
+                        ? "border-cyan-600 bg-cyan-50 text-cyan-950 shadow-sm ring-1 ring-cyan-600/20"
+                        : cloudWizardStep > stepNum
+                          ? "border-emerald-200 bg-emerald-50/90 text-emerald-950"
+                          : "cursor-not-allowed border-gray-200 bg-white text-gray-400",
+                    )}
+                  >
+                    <span className="block text-[9px] font-medium uppercase text-gray-500">{stepNum}/3</span>
+                    <span className="block text-[12px] font-semibold">{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : null}
 
           {tab === "cloud" ? (
             <>
-              <div>
+              {cloudWizardStep === 1 ? (
+                <>
+                  <p className="rounded-lg bg-cyan-50/90 px-3 py-2 text-[11px] leading-snug text-cyan-950 ring-1 ring-cyan-100">
+                    O URL público HTTPS é atribuído automaticamente pela plataforma (subdomínio único). Indique só a{" "}
+                    <strong>porta interna</strong> em que o seu serviço escuta dentro da imagem Docker.
+                  </p>
+                  <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                   {t.modalNewAppProfile!}
                 </p>
@@ -878,7 +962,15 @@ function NewServerModal({
                   </label>
                 </div>
               )}
+                </>
+              ) : null}
 
+              {cloudWizardStep === 2 ? (
+                <>
+                  <p className="rounded-lg bg-slate-50 px-3 py-2 text-[11px] leading-snug text-slate-800 ring-1 ring-slate-100">
+                    Defina a <strong>porta interna</strong> e os <strong>recursos iniciais</strong>. O Traefik termina HTTPS na
+                    porta 443 e encaminha para este serviço.
+                  </p>
               <label className="block text-xs font-medium text-gray-700">
                 Porta interna do contentor
                 <input
@@ -927,6 +1019,55 @@ function NewServerModal({
                   </label>
                 </div>
               </div>
+                </>
+              ) : null}
+
+              {cloudWizardStep === 3 ? (
+                <>
+                  <div className="rounded-xl border border-gray-200 bg-[#fbfbf9] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                    <p className="text-xs font-semibold text-gray-900">{t.onboardingReviewTitle}</p>
+                    <p className="mt-1 text-[11px] text-gray-600">{t.modalResourcesCloudOnly}</p>
+                    <dl className="mt-4 grid gap-2.5 text-sm">
+                      <div className="flex justify-between gap-4 border-b border-gray-100 pb-2">
+                        <dt className="text-gray-500">{t.modalNewName}</dt>
+                        <dd className="max-w-[60%] text-right font-medium text-gray-900">{name.trim() || "—"}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4 border-b border-gray-100 pb-2">
+                        <dt className="text-gray-500">{t.modalNewAppProfile}</dt>
+                        <dd className="text-right font-medium text-gray-900">
+                          {t[PROFILE_DEFAULTS[appProfile].labelKey] ?? PROFILE_DEFAULTS[appProfile].labelKey}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between gap-4 border-b border-gray-100 pb-2">
+                        <dt className="text-gray-500">{deployMode === "image" ? t.modalNewDeployImage : t.modalNewDeployRepo}</dt>
+                        <dd className="max-w-[60%] break-all text-right font-mono text-xs text-gray-900">
+                          {deployMode === "image" ? dockerImage.trim() || "—" : sourceRepo.trim() || "—"}
+                        </dd>
+                      </div>
+                      {deployMode === "repo" ? (
+                        <div className="flex justify-between gap-4 border-b border-gray-100 pb-2">
+                          <dt className="text-gray-500">{t.modalGithubUseBranch}</dt>
+                          <dd className="max-w-[60%] break-all text-right font-mono text-xs text-gray-900">
+                            {branch.trim() || "—"}
+                          </dd>
+                        </div>
+                      ) : null}
+                      <div className="flex justify-between gap-4 border-b border-gray-100 pb-2">
+                        <dt className="text-gray-500">Porta interna</dt>
+                        <dd className="font-mono text-right font-medium text-gray-900">{internalPort.trim() || "80"}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4 border-b border-gray-100 pb-2">
+                        <dt className="text-gray-500">{t.modalMemoryGb}</dt>
+                        <dd className="text-right font-medium text-gray-900">{memoryGb.trim() || "—"}</dd>
+                      </div>
+                      <div className="flex justify-between gap-4 pb-1">
+                        <dt className="text-gray-500">{t.modalVcpus}</dt>
+                        <dd className="text-right font-medium text-gray-900">{vcpus.trim() || "—"}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </>
+              ) : null}
             </>
           ) : (
             <>
@@ -957,14 +1098,49 @@ function NewServerModal({
           )}
 
           {msg ? <p className="text-sm text-red-700">{msg}</p> : null}
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void submit()}
-            className="btn-primary focus-themed w-full rounded-lg py-2.5 text-sm font-semibold disabled:opacity-50"
-          >
-            {t.modalNewCreate!}
-          </button>
+          {tab === "cloud" ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                disabled={busy || cloudWizardStep <= 1}
+                onClick={() => {
+                  setMsg(null);
+                  setCloudWizardStep((s) => Math.max(1, s - 1));
+                }}
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-800 shadow-sm transition hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40"
+              >
+                {t.onboardingBack}
+              </button>
+              {cloudWizardStep < 3 ? (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => tryAdvanceCloudWizard()}
+                  className="btn-primary focus-themed rounded-lg px-6 py-2.5 text-sm font-semibold disabled:opacity-50 sm:ml-auto"
+                >
+                  {t.onboardingNext}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void submit()}
+                  className="btn-primary focus-themed rounded-lg px-6 py-2.5 text-sm font-semibold disabled:opacity-50 sm:ml-auto"
+                >
+                  {t.modalNewCreate}
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void submit()}
+              className="btn-primary focus-themed w-full rounded-lg py-2.5 text-sm font-semibold disabled:opacity-50"
+            >
+              {t.modalNewCreate!}
+            </button>
+          )}
             </>
           )}
         </div>

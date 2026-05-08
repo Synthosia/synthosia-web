@@ -70,6 +70,12 @@ export type ServerRow = {
   cloudLifecycle?: CloudLifecycle;
   managedCompute?: ComputeInstance;
   sshInstance?: ServerInstance;
+  /** Métricas ao vivo (dashboard) — só instâncias compute. */
+  liveCpuPercent?: number | null;
+  liveMemoryPercent?: number | null;
+  liveHttpProbeSummary?: string;
+  liveContainerMemUsage?: string;
+  liveMetricRecordedAt?: string;
 };
 
 export function cloudStatusBadgeClass(lc: CloudLifecycle | undefined): string {

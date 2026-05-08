@@ -66,6 +66,18 @@ export type ConsoleAlert = {
   severity: string;
 };
 
+/** Última amostra na BD por instância (dashboard / lista). */
+export type ConsoleInstanceLiveMetric = {
+  instanceId: string;
+  recordedAt: string;
+  cpuPercent?: number;
+  memoryPercent?: number;
+  networkInMbps?: number;
+  networkOutMbps?: number;
+  httpProbe?: unknown;
+  container?: unknown;
+};
+
 export type ConsoleDashboard = {
   alerts: ConsoleAlert[];
   metrics: {
@@ -74,6 +86,8 @@ export type ConsoleDashboard = {
     networkMbpsSeries: number[];
     activeWorkers: number;
   };
+  /** Opcional até clientes antigos; sempre presente nas APIs atuais. */
+  instanceLiveMetrics?: ConsoleInstanceLiveMetric[];
   notificationCount: number;
   windowLabel: string;
   generatedAt: number;
@@ -209,6 +223,15 @@ const MANAGED_SERVER_INSTANCES_BASE = "/v1/infrastructure/managed-server-instanc
  */
 export function cloudManagedServiceStreamUrl(computeInstanceId: string): string {
   return `${API_URL}${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(computeInstanceId)}/stream`;
+}
+
+/** WebSocket: mesmo snapshot JSON que o SSE `snapshot` (métricas em tempo real após gravação na BD). */
+export function computeInstanceMetricsWebSocketUrl(computeInstanceId: string): string {
+  const base = API_URL.trim();
+  const ws =
+    base.startsWith("https://") ? `wss://${base.slice("https://".length)}` : `ws://${base.slice("http://".length)}`;
+  const path = `${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(computeInstanceId)}/metrics-ws`;
+  return `${ws.replace(/\/$/, "")}${path}`;
 }
 
 /** SSE durante o job de provision (linhas `log` + `done`). */
@@ -416,6 +439,60 @@ export type ComputeInstanceAuditLatest = {
 export async function getComputeInstanceAuditLatest(instanceId: string): Promise<ComputeInstanceAuditLatest> {
   return apiFetch<ComputeInstanceAuditLatest>(
     `${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(instanceId)}/audit-latest`,
+    { method: "GET" },
+    { retryAuth: true },
+  );
+}
+
+/** Última linha persistida em `compute_instance_metric_samples` (polling / detalhe). */
+export type ComputeInstanceMetricsLatest = {
+  recordedAt: string | null;
+  cpuPercent?: number;
+  memoryPercent?: number;
+  networkInMbps?: number;
+  networkOutMbps?: number;
+  extras: Record<string, unknown>;
+};
+
+export async function getComputeInstanceMetricsLatest(instanceId: string): Promise<ComputeInstanceMetricsLatest> {
+  return apiFetch<ComputeInstanceMetricsLatest>(
+    `${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(instanceId)}/metrics-latest`,
+    { method: "GET" },
+    { retryAuth: true },
+  );
+}
+
+/** Pedidos HTTP persistidos a partir do access log JSON do Traefik (agente → API). */
+export type ComputeHttpAccessEvent = {
+  id: string;
+  occurredAt: string;
+  method: string;
+  path: string;
+  statusCode?: number;
+  durationMs?: number;
+  requestHost?: string;
+  remoteAddr?: string;
+  routerName?: string;
+};
+
+export type ComputeHttpAccessList = {
+  items: ComputeHttpAccessEvent[];
+  nextCursor?: { occurredAt: string; id: string };
+};
+
+export async function getComputeInstanceHttpAccess(
+  instanceId: string,
+  opts?: { limit?: number; cursor?: { occurredAt: string; id: string } },
+): Promise<ComputeHttpAccessList> {
+  const q = new URLSearchParams();
+  if (opts?.limit != null) q.set("limit", String(opts.limit));
+  if (opts?.cursor) {
+    q.set("cursorOccurredAt", opts.cursor.occurredAt);
+    q.set("cursorId", opts.cursor.id);
+  }
+  const qs = q.toString();
+  return apiFetch<ComputeHttpAccessList>(
+    `${COMPUTE_INSTANCES_BASE}/${encodeURIComponent(instanceId)}/http-access${qs ? `?${qs}` : ""}`,
     { method: "GET" },
     { retryAuth: true },
   );
