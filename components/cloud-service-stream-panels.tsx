@@ -7,6 +7,7 @@ import { AuditPeersTable } from "@/components/instance/instance-audit-peers";
 import { useInstanceMetricsWebSocket } from "@/components/instance/use-instance-metrics-ws";
 import { cloudManagedServiceStreamUrl } from "@/lib/synthosia-api";
 import { formatContainerMem, formatHttpProbeSummary } from "@/lib/telemetry-display";
+import { Fullscreen } from "lucide-react";
 
 type MetricsLiveSample = {
   recordedAt?: string;
@@ -79,11 +80,13 @@ export function CloudServiceStreamPanels({
 
   const [snap, setSnap] = useState<CloudServiceSseSnapshot | null>(null);
   const [runtimeText, setRuntimeText] = useState("");
-  const [buildText, setBuildText] = useState("");
+  // const [buildText, setBuildText] = useState("");
   const [streamState, setStreamState] = useState<"idle" | "live" | "error">("idle");
 
+  const [logExpanded, setLogExpanded] = useState(false);
+
   const runtimeBottom = useRef<HTMLDivElement>(null);
-  const buildBottom = useRef<HTMLDivElement>(null);
+  // const buildBottom = useRef<HTMLDivElement>(null);
 
   const mergeWsSnapshot = useCallback((incoming: Record<string, unknown>) => {
     setSnap((prev) => {
@@ -109,7 +112,7 @@ export function CloudServiceStreamPanels({
     if (!cloudBindingId || railwayMissing) {
       setSnap(null);
       setRuntimeText("");
-      setBuildText("");
+      // setBuildText("");
       setStreamState("idle");
       return;
     }
@@ -152,21 +155,22 @@ export function CloudServiceStreamPanels({
           /* ignore */
         }
       });
-      es.addEventListener("logsBuild", (e) => {
-        setStreamState("live");
-        try {
-          const d = JSON.parse((e as MessageEvent).data) as StreamLogsPayload;
-          if (d.error === "fetch_failed") {
-            setBuildText(sm.logsLoadError ?? "Erro ao carregar registos de build.");
-          } else {
-            setBuildText(
-              linesToText(d.lines) || (d.hint === "no_deployment" ? `— ${sm.streamLogsNoDeploy}` : ""),
-            );
-          }
-        } catch {
-          /* ignore */
-        }
-      });
+
+      // es.addEventListener("logsBuild", (e) => {
+      //   setStreamState("live");
+      //   try {
+      //     const d = JSON.parse((e as MessageEvent).data) as StreamLogsPayload;
+      //     if (d.error === "fetch_failed") {
+      //       setBuildText(sm.logsLoadError ?? "Erro ao carregar registos de build.");
+      //     } else {
+      //       setBuildText(
+      //         linesToText(d.lines) || (d.hint === "no_deployment" ? `— ${sm.streamLogsNoDeploy}` : ""),
+      //       );
+      //     }
+      //   } catch {
+      //     /* ignore */
+      //   }
+      // });
 
       es.onerror = () => {
         if (cancelled) return;
@@ -189,9 +193,9 @@ export function CloudServiceStreamPanels({
     runtimeBottom.current?.scrollIntoView({ behavior: "smooth" });
   }, [runtimeText]);
 
-  useEffect(() => {
-    buildBottom.current?.scrollIntoView({ behavior: "smooth" });
-  }, [buildText]);
+  // useEffect(() => {
+  //   buildBottom.current?.scrollIntoView({ behavior: "smooth" });
+  // }, [buildText]);
 
   const cpu = snap?.metrics?.cpu?.value;
   const mem = snap?.metrics?.memoryGb?.value;
@@ -219,8 +223,8 @@ export function CloudServiceStreamPanels({
   const auditLabel =
     auditFlows != null || auditPeerSlots != null
       ? (sm.liveStreamAuditSummary ?? "{flows} fluxos · {peers} IPs remotos")
-          .replace("{flows}", String(auditFlows ?? "—"))
-          .replace("{peers}", String(auditPeerSlots ?? "—"))
+        .replace("{flows}", String(auditFlows ?? "—"))
+        .replace("{peers}", String(auditPeerSlots ?? "—"))
       : null;
 
   if (!cloudBindingId || railwayMissing) {
@@ -280,7 +284,7 @@ export function CloudServiceStreamPanels({
                   metricsWsStatus === "connecting" && "bg-slate-100 text-slate-700",
                   metricsWsStatus === "error" && "bg-rose-50 text-rose-900",
                   metricsWsStatus === "idle" &&
-                    (gcp ? "bg-[var(--surface-raised)] text-[var(--text-muted)]" : "bg-gray-100 text-gray-600"),
+                  (gcp ? "bg-[var(--surface-raised)] text-[var(--text-muted)]" : "bg-gray-100 text-gray-600"),
                 )}
                 title={sm.metricsWsHint ?? "WebSocket: push quando o agente grava métricas na API"}
               >
@@ -297,7 +301,7 @@ export function CloudServiceStreamPanels({
                   "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
                   streamState === "live" && "bg-emerald-100 text-emerald-900",
                   streamState === "idle" &&
-                    (gcp ? "bg-[var(--surface-raised)] text-[var(--text-secondary)]" : "bg-sky-100 text-sky-900"),
+                  (gcp ? "bg-[var(--surface-raised)] text-[var(--text-secondary)]" : "bg-sky-100 text-sky-900"),
                   streamState === "error" && "bg-amber-100 text-amber-950",
                 )}
               >
@@ -445,9 +449,14 @@ export function CloudServiceStreamPanels({
         </section>
       ) : null}
 
+      {logExpanded && (
+        <div className={cn("fixed inset-0 bg-black/20 backdrop-blur-[1px] w-screen h-screen overflow-auto z-[9998]")}></div>
+      )}
+
       <section
         className={cn(
           "flex flex-col shadow-sm",
+          logExpanded && "transition-normal ease-in-out duration-300 absolute inset-0 z-[9999] overflow-hidden max-w-7/8 max-h-7/8 mx-auto",
           wide ? "min-h-0 flex-1" : "min-h-[280px]",
           gcp
             ? "rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
@@ -455,21 +464,31 @@ export function CloudServiceStreamPanels({
         )}
         aria-label={sm.streamPanelRuntime}
       >
-        <h2
-          className={cn(
-            "border-b pb-2 text-[11px] font-semibold uppercase tracking-wider",
-            gcp ? "border-[var(--border-subtle)] text-[var(--text-muted)]" : "border-gray-100 text-gray-500",
-          )}
-        >
-          {sm.streamPanelRuntime}
-        </h2>
+        <div className={cn(
+          "flex items-center justify-between border-b mb-2 pb-2",
+          gcp ? "border-[var(--border-subtle)] " : "border-gray-100",
+        )}>
+          <h2
+            className={cn(
+              "text-[11px] font-semibold uppercase tracking-wider",
+              gcp ? "text-[var(--text-muted)]" : "text-gray-500",
+            )}
+          >
+            {sm.streamPanelRuntime}
+          </h2>
+          <Fullscreen
+            onClick={() => setLogExpanded(!logExpanded)}
+            className={cn("h-4 w-4 cursor-pointer", gcp ? "text-[var(--text-muted)]" : "text-gray-500")}
+          />
+        </div>
         <pre className={cn(logPreCls, !wide && "mt-3", "text-emerald-100/95")}>
           {runtimeText || sm.streamPanelLogsWaiting}
           <div ref={runtimeBottom} />
         </pre>
       </section>
 
-      <section
+      {/* PAINEL DE BUILD DESATIVADO */}
+      {/* <section
         className={cn(
           "flex flex-col shadow-sm",
           wide ? "min-h-0 flex-1" : "min-h-[280px]",
@@ -493,7 +512,7 @@ export function CloudServiceStreamPanels({
           {buildText || sm.streamPanelLogsWaiting}
           <div ref={buildBottom} />
         </pre>
-      </section>
+      </section> */}
     </div>
   );
 }
