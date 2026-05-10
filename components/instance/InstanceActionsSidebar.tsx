@@ -3,8 +3,11 @@
 import { motion } from "motion/react";
 import { cn } from "@/lib/cn";
 import type { CloudLifecycle } from "@/components/server-row-types";
+import { useCloudInstanceMetricsLatest } from "./use-cloud-instance-metrics-latest";
+import { formatContainerMem, formatHttpProbeSummary } from "@/lib/telemetry-display";
 
 export function InstanceActionsSidebar({
+  bindingId,
   labels,
   canManage,
   busy,
@@ -19,6 +22,7 @@ export function InstanceActionsSidebar({
   onStart,
   onDelete,
 }: {
+  bindingId: string;
   labels: {
     actions: string;
     health: string;
@@ -38,6 +42,10 @@ export function InstanceActionsSidebar({
     statusWarn: string;
     confirmDelete: string;
     confirmStop: string;
+    liveTelemetry: string;
+    telemetryHttp: string,
+    telemetryMem: string,
+    telemetryRecorded: string,
   };
   canManage: boolean;
   busy: boolean;
@@ -46,6 +54,7 @@ export function InstanceActionsSidebar({
   hasDeployment: boolean;
   /** Railway: quando true, só «Eliminar». Ignorado quando `computePlane`. */
   hideLifecycleControls?: boolean;
+  hideLiveTelemetry?: boolean;
   /** VPS/compute: Parar/Reiniciar em execução; Iniciar/Deploy parado; Eliminar sempre. */
   computePlane?: boolean;
   onDeploy: () => void;
@@ -60,6 +69,14 @@ export function InstanceActionsSidebar({
   const removing = lifecycle === "removing";
   const stopped = lifecycle === "stopped";
   const errorLc = lifecycle === "error";
+
+  const { data: latest } = useCloudInstanceMetricsLatest(bindingId, 0);
+
+  const extras = latest?.extras ?? {};
+  const httpProbe = extras.httpProbe;
+  const container = extras.container;
+  const probeSummary = formatHttpProbeSummary(httpProbe);
+  const memUsage = formatContainerMem(container);
 
   const computeTransitioning =
     computePlane &&
@@ -198,6 +215,41 @@ export function InstanceActionsSidebar({
           </button>
         </div>
       </motion.section>
+
+
+      {(probeSummary || memUsage || latest?.recordedAt) && (
+        <motion.section
+          initial={{ opacity: 0, x: 8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.22, delay: 0.05 }}
+          className={cn(
+            "rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] p-5",
+            "shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
+          )}
+        >
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            {labels.liveTelemetry}
+          </h2>
+          {latest?.recordedAt ? (
+            <p className="mt-4 flex justify-between items-center">
+              <span className="text-[var(--text-secondary)]">{labels.telemetryRecorded}: </span>
+              <span className="text-sm text-[var(--text-primary)]">{new Date(latest.recordedAt).toLocaleString()}</span>
+            </p>
+          ) : null}
+          {probeSummary ? (
+            <p className="mt-1 flex justify-between items-center">
+              <span className="text-[var(--text-secondary)]">{labels.telemetryHttp}: </span>
+              <span className="text-sm text-[var(--text-primary)]">{probeSummary}</span>
+            </p>
+          ) : null}
+          {memUsage ? (
+            <p className="mt-1 flex justify-between items-center">
+              <span className="text-[var(--text-secondary)]">{labels.telemetryMem}: </span>
+              <span className="text-sm text-[var(--text-primary)]">{memUsage}</span>
+            </p>
+          ) : null}
+        </motion.section>
+      )}
 
       <motion.section
         initial={{ opacity: 0, x: 8 }}

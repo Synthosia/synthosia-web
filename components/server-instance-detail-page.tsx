@@ -278,6 +278,9 @@ export function ServerInstanceDetailPage({
       confirmDelete: sm.instanceDetailConfirmDelete,
       confirmStop: sm.instanceDetailConfirmStop,
       liveTelemetry: sm.instanceDetailLiveTelemetry,
+      telemetryHttp: sm.streamPanelHttpProbe,
+      telemetryMem: sm.streamPanelContainerMem,
+      telemetryRecorded: sm.streamPanelSampleRecorded,
     }),
     [sm],
   );
@@ -545,6 +548,7 @@ export function ServerInstanceDetailPage({
               lifecycle={cloudLifecycle}
               railwayMissing={false}
               computePlane
+              bindingId={cloudBindingId}
               hasDeployment={
                 service.status === "running" ||
                 service.status === "stopped" ||

@@ -86,9 +86,9 @@ export function InstanceMetricsStrip({
   };
 }) {
   const { data, loading } = useCloudInstanceMetrics(bindingId, 24);
-  const { data: latest } = useCloudInstanceMetricsLatest(bindingId, 0);
+  // const { data: latest } = useCloudInstanceMetricsLatest(bindingId, 0);
   const { cpuPct, memPct, netMbps } = extractMetricSeries(data);
-  const lim = parseLimits(null);
+  // const lim = parseLimits(null);
 
   const cpuVal =
     cpuPct.length >= 1 ? `${lastOrZero(cpuPct)}` : loading ? "…" : "—";
@@ -100,72 +100,72 @@ export function InstanceMetricsStrip({
   const diskPrimary = `${service.memoryMb} MB / ${service.cpuMillicores} mCPU`;
   const diskSecondary = labels.diskHint;
 
-  const extras = latest?.extras ?? {};
-  const httpProbe = extras.httpProbe;
-  const container = extras.container;
-  const probeSummary = formatHttpProbeSummary(httpProbe);
-  const memUsage = formatContainerMem(container);
+  // const extras = latest?.extras ?? {};
+  // const httpProbe = extras.httpProbe;
+  // const container = extras.container;
+  // const probeSummary = formatHttpProbeSummary(httpProbe);
+  // const memUsage = formatContainerMem(container);
 
   return (
     <div className="space-y-4">
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <MetricCard
-        title={labels.cpu}
-        hint={labels.cpuHint}
-        value={cpuVal}
-        unit="%"
-        spark={cpuPct.length >= 1 ? cpuPct : loading ? [] : [0, 0]}
-        stroke="#1a73e8"
-        delay={0}
-      />
-      <MetricCard
-        title={labels.memory}
-        hint={labels.memoryHint}
-        value={memVal}
-        unit="%"
-        spark={memPct.length >= 1 ? memPct : loading ? [] : [0, 0]}
-        stroke="#16a34a"
-        delay={0.04}
-      />
-      <MetricCard
-        title={labels.network}
-        hint={labels.networkHint}
-        value={netVal}
-        unit={netMbps.length >= 1 ? "Mb/s" : ""}
-        spark={
-          netMbps.length >= 1
-            ? netMbps.map((v) => Math.min(100, (v / 5) * 100))
-            : loading
-              ? []
-              : [0, 0]
-        }
-        stroke="#7c3aed"
-        delay={0.08}
-      />
-      <motion.article
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.22, delay: 0.12 }}
-        className={cn(
-          "rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] p-5",
-          "shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]",
-        )}
-      >
-        <p className="text-xs font-medium text-[var(--text-muted)]">{labels.disk}</p>
-        <p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">{labels.diskHint}</p>
-        <p className="mt-4 text-2xl font-bold tabular-nums text-[var(--text-primary)]">
-          {diskPrimary}
-          {diskSecondary ? (
-            <span className="ml-1 text-sm font-semibold text-[var(--text-muted)]">{diskSecondary}</span>
-          ) : null}
-        </p>
-        <p className="mt-3 border-t border-[var(--border-subtle)] pt-3 text-[10px] font-medium text-[var(--text-secondary)]">
-          {labels.lastWindow}
-          {data?.windowHours != null ? ` · ${data.windowHours}h` : ""}
-        </p>
-      </motion.article>
-    </div>
-      {(probeSummary || memUsage || latest?.recordedAt) && (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          title={labels.cpu}
+          hint={labels.cpuHint}
+          value={cpuVal}
+          unit="%"
+          spark={cpuPct.length >= 1 ? cpuPct : loading ? [] : [0, 0]}
+          stroke="#1a73e8"
+          delay={0}
+        />
+        <MetricCard
+          title={labels.memory}
+          hint={labels.memoryHint}
+          value={memVal}
+          unit="%"
+          spark={memPct.length >= 1 ? memPct : loading ? [] : [0, 0]}
+          stroke="#16a34a"
+          delay={0.04}
+        />
+        <MetricCard
+          title={labels.network}
+          hint={labels.networkHint}
+          value={netVal}
+          unit={netMbps.length >= 1 ? "Mb/s" : ""}
+          spark={
+            netMbps.length >= 1
+              ? netMbps.map((v) => Math.min(100, (v / 5) * 100))
+              : loading
+                ? []
+                : [0, 0]
+          }
+          stroke="#7c3aed"
+          delay={0.08}
+        />
+        <motion.article
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.22, delay: 0.12 }}
+          className={cn(
+            "rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] p-5",
+            "shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]",
+          )}
+        >
+          <p className="text-xs font-medium text-[var(--text-muted)]">{labels.disk}</p>
+          <p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">{labels.diskHint}</p>
+          <p className="mt-4 text-2xl font-bold tabular-nums text-[var(--text-primary)]">
+            {diskPrimary}
+            {diskSecondary ? (
+              <span className="ml-1 text-sm font-semibold text-[var(--text-muted)]">{diskSecondary}</span>
+            ) : null}
+          </p>
+          <p className="mt-3 border-t border-[var(--border-subtle)] pt-3 text-[10px] font-medium text-[var(--text-secondary)]">
+            {labels.lastWindow}
+            {data?.windowHours != null ? ` · ${data.windowHours}h` : ""}
+          </p>
+        </motion.article>
+      </div>
+      {/* {(probeSummary || memUsage || latest?.recordedAt) && (
         <motion.section
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -194,7 +194,7 @@ export function InstanceMetricsStrip({
             </p>
           ) : null}
         </motion.section>
-      )}
+      )} */}
     </div>
   );
 }
