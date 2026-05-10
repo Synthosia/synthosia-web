@@ -7,7 +7,7 @@ import { AuditPeersTable } from "@/components/instance/instance-audit-peers";
 import { useInstanceMetricsWebSocket } from "@/components/instance/use-instance-metrics-ws";
 import { cloudManagedServiceStreamUrl } from "@/lib/synthosia-api";
 import { formatContainerMem, formatHttpProbeSummary } from "@/lib/telemetry-display";
-import { Fullscreen } from "lucide-react";
+import { Fullscreen, X } from "lucide-react";
 
 type MetricsLiveSample = {
   recordedAt?: string;
@@ -476,10 +476,17 @@ export function CloudServiceStreamPanels({
           >
             {sm.streamPanelRuntime}
           </h2>
-          <Fullscreen
-            onClick={() => setLogExpanded(!logExpanded)}
-            className={cn("h-4 w-4 cursor-pointer", gcp ? "text-[var(--text-muted)]" : "text-gray-500")}
-          />
+          {logExpanded ? (
+            <X
+              onClick={() => setLogExpanded(!logExpanded)}
+              className={cn("h-4 w-4 cursor-pointer", gcp ? "text-[var(--text-muted)]" : "text-gray-500")}
+            />
+          ) : (
+            <Fullscreen
+              onClick={() => setLogExpanded(!logExpanded)}
+              className={cn("h-4 w-4 cursor-pointer", gcp ? "text-[var(--text-muted)]" : "text-gray-500")}
+            />
+          )}
         </div>
         <pre className={cn(logPreCls, !wide && "mt-3", "text-emerald-100/95")}>
           {runtimeText || sm.streamPanelLogsWaiting}
