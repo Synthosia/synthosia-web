@@ -32,6 +32,7 @@ import {
   postComputeInstanceStop,
   type ComputeInstance,
 } from "@/lib/synthosia-api";
+import { Copy } from "lucide-react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -183,7 +184,7 @@ export function ServerInstanceDetailPage({
       "relative whitespace-nowrap pb-3 text-sm font-medium transition-colors",
       active ? "text-[var(--brand-accent-2)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]",
       active &&
-        "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:rounded-full after:bg-[var(--brand-accent-2)]",
+      "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:rounded-full after:bg-[var(--brand-accent-2)]",
     );
 
   const metricStripLabels = useMemo(
@@ -276,6 +277,7 @@ export function ServerInstanceDetailPage({
       statusWarn: sm.sidebarStatusWarn,
       confirmDelete: sm.instanceDetailConfirmDelete,
       confirmStop: sm.instanceDetailConfirmStop,
+      liveTelemetry: sm.instanceDetailLiveTelemetry,
     }),
     [sm],
   );
@@ -344,6 +346,40 @@ export function ServerInstanceDetailPage({
         </p>
       </div>
     );
+  }
+
+  function formatCamelCase(text: string) {
+    return text
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/^./, str => str.toUpperCase());
+  }
+
+  function ActionTechnicalDetails() {
+    const technicalDetails = useMemo(() => {
+      if (!service) return sm.actionTechnicalNotFound;
+
+      return Object.entries(service).map(([key, value]) => {
+        const parsedValue =
+          typeof value === "object"
+            ? JSON.stringify(value)
+            : String(value);
+
+        return (
+          <div key={key} className="group flex justify-between items-center px-4 py-2 duration-300 hover:duration-300 rounded-2xl">
+            <div className="flex flex-col">
+              <p className="font-semibold">{formatCamelCase(key)}</p>
+              <p className="text-sm break-all">{parsedValue}</p>
+            </div>
+            <Copy
+              onClick={() => { navigator.clipboard.writeText(parsedValue); }}
+              className="w-4 h-4 cursor-pointer hidden opacity-50 group-hover:block hover:opacity-100 duration-300 hover:duration-300"
+            />
+          </div>
+        );
+      });
+    }, [service]);
+
+    return technicalDetails;
   }
 
   return (
@@ -429,33 +465,7 @@ export function ServerInstanceDetailPage({
           {tab === "overview" ? (
             <>
               <InstanceMetricsStrip bindingId={cloudBindingId} service={service} labels={metricStripLabels} />
-              <div className="grid gap-4 lg:grid-cols-2">
-                <motion.section
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.22 }}
-                  className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-                >
-                  <h2 className="text-base font-semibold text-[var(--text-primary)]">
-                    {sm.instanceDetailProperties}
-                  </h2>
-                  <dl className="mt-4 space-y-3 text-sm">
-                    <div className="grid gap-1 border-b border-[var(--border-subtle)] pb-3">
-                      <dt className="text-xs font-medium text-[var(--text-muted)]">{sm.instanceDetailImage}</dt>
-                      <dd className="break-all font-mono text-xs text-[var(--text-primary)]">{service.dockerImage}</dd>
-                    </div>
-                    <div className="grid gap-1 border-b border-[var(--border-subtle)] pb-3">
-                      <dt className="text-xs font-medium text-[var(--text-muted)]">Estado</dt>
-                      <dd className="text-[var(--text-primary)]">{service.status}</dd>
-                    </div>
-                    <div className="grid gap-1">
-                      <dt className="text-xs font-medium text-[var(--text-muted)]">Traefik</dt>
-                      <dd className="text-[var(--text-primary)]">
-                        {service.traefikHosts?.length ? service.traefikHosts.join(", ") : "—"}
-                      </dd>
-                    </div>
-                  </dl>
-                </motion.section>
+              <div className="grid gap-4 lg:grid-cols-1">
                 <motion.section
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -464,7 +474,7 @@ export function ServerInstanceDetailPage({
                 >
                   <h2 className="text-base font-semibold text-[var(--text-primary)]">{sm.actionTechnical}</h2>
                   <pre className="mt-4 max-h-[min(72vh,40rem)] min-h-[12rem] overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-4 font-mono text-[12px] leading-relaxed text-[var(--text-primary)] sm:text-[13px]">
-                    {JSON.stringify(service, null, 2)}
+                    <ActionTechnicalDetails />
                   </pre>
                   <p className="mt-3 text-xs text-[var(--text-muted)]">{sm.modalTechnicalFootnote}</p>
                 </motion.section>
