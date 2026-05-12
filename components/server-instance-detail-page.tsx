@@ -63,8 +63,6 @@ export function ServerInstanceDetailPage({
   const [tab, setTab] = useState<InstanceDetailTab>(() => initialDetailTab ?? "overview");
   const [lifecycleBusy, setLifecycleBusy] = useState(false);
 
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
-
   const refresh = useCallback(
     async (opts?: { silent?: boolean }) => {
       if (!opts?.silent) setLoading(true);
@@ -399,16 +397,6 @@ export function ServerInstanceDetailPage({
       .replace(/^./, str => str.toUpperCase());
   }
 
-  const handleCopy = async (key: string, value: string) => {
-    await navigator.clipboard.writeText(value);
-
-    setCopiedKey(key);
-
-    setTimeout(() => {
-      setCopiedKey((current) => (current === key ? null : current));
-    }, 2000);
-  };
-
   function ActionTechnicalDetails() {
     const technicalDetails = useMemo(() => {
       if (!service) return sm.actionTechnicalNotFound;
@@ -428,12 +416,12 @@ export function ServerInstanceDetailPage({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Copy
-                  onClick={() => handleCopy(key, parsedValue)}
+                  onClick={() => navigator.clipboard.writeText(parsedValue)}
                   className="w-4 h-4 cursor-pointer hidden opacity-50 group-hover:block hover:opacity-100 duration-300 hover:duration-300"
                 />
               </TooltipTrigger>
               <TooltipContent>
-                <span>{copiedKey === key ? dictionary.copy.copied : dictionary.copy.idle}</span>
+                <span>{dictionary.copy.idle}</span>
               </TooltipContent>
             </Tooltip>
           </div>
