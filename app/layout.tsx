@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const displayFont = Space_Grotesk({
   variable: "--font-display",
@@ -76,13 +77,15 @@ export default function RootLayout({
       <body className="surface-page min-h-dvh">
         <ThemeProvider>
           <LanguageProvider>
-            <div className="platform-shell flex min-h-dvh flex-col">
-              <NavigationProgress />
-              <AmbientBackground />
-              <SiteHeader />
-              <PageTransition>{children}</PageTransition>
-              <SiteFooter />
-            </div>
+            <TooltipProvider>
+              <div className="platform-shell flex min-h-dvh flex-col">
+                <NavigationProgress />
+                <AmbientBackground />
+                <SiteHeader />
+                <PageTransition>{children}</PageTransition>
+                <SiteFooter />
+              </div>
+            </TooltipProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>

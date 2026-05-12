@@ -33,6 +33,7 @@ import {
   type ComputeInstance,
 } from "@/lib/synthosia-api";
 import { CloudBackup, CloudSync, CloudUpload, Copy, HardDriveUpload, Play, RotateCcw, Square, Trash } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -490,20 +491,35 @@ export function ServerInstanceDetailPage({
               {computeOfflineActions && (
                 <>
                   {/* Start */}
-                  <button
-                    disabled={!canManage || lifecycleBusy}
-                    onClick={() => { runStart(); }}
-                  >
-                    <Play className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        disabled={!canManage || lifecycleBusy}
+                        onClick={() => { runStart(); }}
+                      >
+                        <Play className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span>{sidebarLabels.start}</span>
+                    </TooltipContent>
+                  </Tooltip>
+
 
                   {/* Deploy */}
-                  <button
-                    disabled={!canManage || lifecycleBusy}
-                    onClick={() => { setTab("configuration") }}
-                  >
-                    <CloudUpload className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        disabled={!canManage || lifecycleBusy}
+                        onClick={() => { setTab("configuration") }}
+                      >
+                        <CloudUpload className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span>{sidebarLabels.deploy}</span>
+                    </TooltipContent>
+                  </Tooltip>
                 </>
               )}
 
@@ -511,47 +527,76 @@ export function ServerInstanceDetailPage({
                 <>
                   {/* Stop */}
                   {canStop && (
-                    <button
-                      disabled={!canManage || lifecycleBusy}
-                      onClick={() => {
-                        if (window.confirm(sm.instanceDetailConfirmStop)) runStop();
-                      }}
-                    >
-                      <Square className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          disabled={!canManage || lifecycleBusy}
+                          onClick={() => {
+                            if (window.confirm(sm.instanceDetailConfirmStop)) runStop();
+                          }}
+                        >
+                          <Square className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span>{sidebarLabels.stop}</span>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
 
                   {/* Restart */}
                   {canRestart && (
-                    <button
-                      disabled={!canManage || lifecycleBusy}
-                      onClick={() => { }}
-                    >
-                      <RotateCcw className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          disabled={!canManage || lifecycleBusy}
+                          onClick={() => { }}
+                        >
+                          <RotateCcw className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span>{sidebarLabels.restart}</span>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </>
               )}
 
               {/* Deploy */}
               {computeErrorSurface && (
-                <button
-                  disabled={!canManage || lifecycleBusy}
-                  onClick={() => { setTab("configuration") }}
-                >
-                  <CloudUpload className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      disabled={!canManage || lifecycleBusy}
+                      onClick={() => { setTab("configuration") }}
+                    >
+                      <CloudUpload className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <span>{sidebarLabels.deploy}</span>
+                  </TooltipContent>
+                </Tooltip>
               )}
 
               {/* Delete */}
-              <button
-                disabled={!canManage || lifecycleBusy}
-                onClick={() => {
-                  if (window.confirm(sm.instanceDetailConfirmDelete)) runDelete();
-                }}
-              >
-                <Trash className="w-5 h-5 cursor-pointer text-[#dc2626] duration-200 hover:duration-200 hover:stroke-3" />
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    disabled={!canManage || lifecycleBusy}
+                    onClick={() => {
+                      if (window.confirm(sm.instanceDetailConfirmDelete)) runDelete();
+                    }}
+                  >
+                    <Trash className="w-5 h-5 cursor-pointer text-[#dc2626] duration-200 hover:duration-200 hover:stroke-3" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <span>{sidebarLabels.delete}</span>
+                </TooltipContent>
+              </Tooltip>
+
             </div>
           </div>
         </div>
