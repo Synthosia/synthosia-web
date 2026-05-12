@@ -97,8 +97,8 @@ export function InstanceMetricsStrip({
   const netLast = netMbps.length ? netMbps[netMbps.length - 1]! : 0;
   const netVal = netMbps.length >= 1 ? `${netLast.toFixed(2)}` : loading ? "…" : "—";
 
-  const diskPrimary = `${service.memoryMb} MB / ${service.cpuMillicores} mCPU`;
-  const diskSecondary = labels.diskHint;
+  // const diskPrimary = `${service.memoryMb} MB / ${service.cpuMillicores} mCPU`;
+  // const diskSecondary = labels.diskHint;
 
   // const extras = latest?.extras ?? {};
   // const httpProbe = extras.httpProbe;
@@ -108,7 +108,7 @@ export function InstanceMetricsStrip({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <MetricCard
           title={labels.cpu}
           hint={labels.cpuHint}
@@ -142,7 +142,7 @@ export function InstanceMetricsStrip({
           stroke="#7c3aed"
           delay={0.08}
         />
-        <motion.article
+        {/* <motion.article
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, delay: 0.12 }}
@@ -163,7 +163,7 @@ export function InstanceMetricsStrip({
             {labels.lastWindow}
             {data?.windowHours != null ? ` · ${data.windowHours}h` : ""}
           </p>
-        </motion.article>
+        </motion.article> */}
       </div>
       {/* {(probeSummary || memUsage || latest?.recordedAt) && (
         <motion.section

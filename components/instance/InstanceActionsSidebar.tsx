@@ -5,11 +5,14 @@ import { cn } from "@/lib/cn";
 import type { CloudLifecycle } from "@/components/server-row-types";
 import { useCloudInstanceMetricsLatest } from "./use-cloud-instance-metrics-latest";
 import { formatContainerMem, formatHttpProbeSummary } from "@/lib/telemetry-display";
+import { ComputeInstance } from "@/lib/synthosia-api";
+import { useCloudInstanceMetrics } from "./use-cloud-instance-metrics";
 
 export function InstanceActionsSidebar({
   bindingId,
   labels,
   canManage,
+  service,
   busy,
   lifecycle,
   railwayMissing,
@@ -23,6 +26,7 @@ export function InstanceActionsSidebar({
   onDelete,
 }: {
   bindingId: string;
+  service: ComputeInstance;
   labels: {
     actions: string;
     health: string;
@@ -43,9 +47,14 @@ export function InstanceActionsSidebar({
     confirmDelete: string;
     confirmStop: string;
     liveTelemetry: string;
+
     telemetryHttp: string,
     telemetryMem: string,
     telemetryRecorded: string,
+
+    disk: string,
+    diskHint: string,
+    lastWindow: string,
   };
   canManage: boolean;
   busy: boolean;
@@ -70,6 +79,7 @@ export function InstanceActionsSidebar({
   const stopped = lifecycle === "stopped";
   const errorLc = lifecycle === "error";
 
+  const { data } = useCloudInstanceMetrics(bindingId, 24);
   const { data: latest } = useCloudInstanceMetricsLatest(bindingId, 0);
 
   const extras = latest?.extras ?? {};
@@ -251,6 +261,31 @@ export function InstanceActionsSidebar({
           ) : null}
         </motion.section>
       )}
+
+      <motion.section
+        initial={{ opacity: 0, x: 8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.22, delay: 0.05 }}
+        className={cn(
+          "rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-panel)] p-5",
+          "shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
+        )}
+      >
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+          {labels.disk}
+        </h2>
+        <p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">{labels.diskHint}</p>
+        <p className="mt-4 text-xl font-bold tabular-nums text-[var(--text-primary)]">
+          {service.memoryMb} MB / {service.cpuMillicores} mCPU
+        </p>
+        {labels.diskHint && (
+          <span className="ml-1 text-sm font-semibold text-[var(--text-muted)]">{labels.diskHint}</span>
+        )}
+        <p className="mt-3 border-t border-[var(--border-subtle)] pt-3 text-[10px] font-medium text-[var(--text-secondary)]">
+          {labels.lastWindow}
+          {data?.windowHours != null ? ` · ${data.windowHours}h` : ""}
+        </p>
+      </motion.section>
 
       <motion.section
         initial={{ opacity: 0, x: 8 }}

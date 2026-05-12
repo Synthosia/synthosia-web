@@ -317,10 +317,15 @@ export function ServerInstanceDetailPage({
       statusWarn: sm.sidebarStatusWarn,
       confirmDelete: sm.instanceDetailConfirmDelete,
       confirmStop: sm.instanceDetailConfirmStop,
+
       liveTelemetry: sm.instanceDetailLiveTelemetry,
       telemetryHttp: sm.streamPanelHttpProbe,
       telemetryMem: sm.streamPanelContainerMem,
       telemetryRecorded: sm.streamPanelSampleRecorded,
+
+      disk: sm.instanceDetailMetricLimits,
+      diskHint: sm.instanceDetailMetricLimitsHint,
+      lastWindow: sm.last24h,
     }),
     [sm],
   );
@@ -709,6 +714,7 @@ export function ServerInstanceDetailPage({
               labels={sidebarLabels}
               canManage={canManage}
               busy={lifecycleBusy}
+              service={service}
               lifecycle={cloudLifecycle}
               railwayMissing={false}
               computePlane
