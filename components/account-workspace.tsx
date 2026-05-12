@@ -292,7 +292,7 @@ export function AccountWorkspace({
                 consoleDashboard={consoleDashboard}
                 cloudBindingId={
                   activeCategory === "servers" &&
-                  (activeNav === "srv-instances" || activeNav === "srv-instance-detail")
+                    (activeNav === "srv-instances" || activeNav === "srv-instance-detail")
                     ? cloudBindingId
                     : null
                 }
@@ -427,22 +427,22 @@ function userInitials(session: AccountSession): string {
 
 function resolveAvatarUrl(session: AccountSession): string | null {
   if (!session.avatarUrl) return null;
-  
+
   // Se for uma URL válida (começa com http), retornar direto
   if (session.avatarUrl.startsWith("http")) {
     return session.avatarUrl;
   }
-  
+
   // Se for um bucket S3 ou similar, tentar construir URL
   if (session.avatarUrl.includes("s3") || session.avatarUrl.includes("bucket")) {
     return `https://${session.avatarUrl}`;
   }
-  
+
   // Se for GitHub ou Google, usar URL direto (já vem da API)
   if (session.authProvider === "github" || session.authProvider === "google") {
     return session.avatarUrl;
   }
-  
+
   return null;
 }
 
@@ -457,7 +457,7 @@ function userAvatarInitials(session: AccountSession): ReactElement {
 
 function userAvatar(session: AccountSession) {
   const avatarUrl = resolveAvatarUrl(session);
-  
+
   if (avatarUrl) {
     return (
       <img
@@ -475,7 +475,7 @@ function userAvatar(session: AccountSession) {
       />
     );
   }
-  
+
   return userAvatarInitials(session);
 }
 
@@ -1100,7 +1100,7 @@ function LegacyDashboardMain({
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Analytics</p>
           <p className="mt-1 text-sm font-semibold text-gray-900">Domain Activity Trend</p>
-          
+
           <div className="mt-6 h-48 flex items-end justify-between gap-2">
             {analyticsData.map((item, idx) => {
               const maxValue = Math.max(...analyticsData.map(d => d.value));
@@ -1140,7 +1140,7 @@ function LegacyDashboardMain({
               <svg viewBox="0 0 100 100" className="h-full w-full">
                 {/* Background circle */}
                 <circle cx="50" cy="50" r="45" fill="none" stroke="#E5E7EB" strokeWidth="15" />
-                
+
                 {/* Active segment (565 out of 779 ≈ 72.5%) */}
                 <circle
                   cx="50"
@@ -1153,7 +1153,7 @@ function LegacyDashboardMain({
                   strokeDashoffset="0"
                   transform="rotate(-90 50 50)"
                 />
-                
+
                 {/* Pending segment (89 out of 779 ≈ 11.4%) */}
                 <circle
                   cx="50"
@@ -1232,9 +1232,8 @@ function LegacyDashboardMain({
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-20 rounded-full bg-gray-100">
                         <div
-                          className={`h-full rounded-full ${
-                            service.cpu >= 80 ? "bg-red-500" : service.cpu >= 60 ? "bg-amber-500" : "bg-emerald-500"
-                          }`}
+                          className={`h-full rounded-full ${service.cpu >= 80 ? "bg-red-500" : service.cpu >= 60 ? "bg-amber-500" : "bg-emerald-500"
+                            }`}
                           style={{ width: `${service.cpu}%` }}
                         />
                       </div>
@@ -1245,9 +1244,8 @@ function LegacyDashboardMain({
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-20 rounded-full bg-gray-100">
                         <div
-                          className={`h-full rounded-full ${
-                            service.memory >= 80 ? "bg-red-500" : service.memory >= 60 ? "bg-amber-500" : "bg-emerald-500"
-                          }`}
+                          className={`h-full rounded-full ${service.memory >= 80 ? "bg-red-500" : service.memory >= 60 ? "bg-amber-500" : "bg-emerald-500"
+                            }`}
                           style={{ width: `${service.memory}%` }}
                         />
                       </div>

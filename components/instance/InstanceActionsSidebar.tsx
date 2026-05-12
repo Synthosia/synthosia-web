@@ -134,6 +134,7 @@ export function InstanceActionsSidebar({
         <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
           {labels.actions}
         </h2>
+        {/* @yLorde Original Headers */}
         <div className="mt-4 flex flex-col gap-2">
           {computePlane ? (
             <>

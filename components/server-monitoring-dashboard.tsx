@@ -730,117 +730,117 @@ function ServerGroup({
             ? urlCloudBindingId === s.managedCompute.id
             : selectedId === s.id;
           return (
-          <li key={s.id}>
-            <div
-              className={cn(
-                "flex w-full flex-col gap-3 rounded-lg border p-3 text-left transition sm:flex-row sm:items-stretch sm:gap-4",
-                rowActive
-                  ? "border-gray-900/15 bg-white shadow-sm ring-1 ring-gray-900/10"
-                  : "border-gray-200 bg-white hover:border-gray-300",
-              )}
-            >
-              <button
-                type="button"
-                onClick={() =>
-                  s.managedCompute ? onOpenCloudDetail(s.managedCompute.id) : onSelectSsh(s.id)
-                }
-                className="flex min-w-0 flex-1 items-start gap-3 text-left"
+            <li key={s.id}>
+              <div
+                className={cn(
+                  "flex w-full flex-col gap-3 rounded-lg border p-3 text-left transition sm:flex-row sm:items-stretch sm:gap-4",
+                  rowActive
+                    ? "border-gray-900/15 bg-white shadow-sm ring-1 ring-gray-900/10"
+                    : "border-gray-200 bg-white hover:border-gray-300",
+                )}
               >
-                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-gray-50 text-gray-500 ring-1 ring-gray-100">
-                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 12h14M5 12a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2M5 12a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2m-2-4h.01M17 16h.01"
-                    />
-                  </svg>
-                </span>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="truncate font-medium text-gray-900">{s.name}</span>
-                    <span
-                      className={cn(
-                        "size-2 shrink-0 rounded-full",
-                        s.cloudLifecycle
-                          ? cloudStatusDotClass(s.cloudLifecycle)
-                          : s.healthy
-                            ? "bg-emerald-500"
-                            : "bg-red-500",
-                      )}
-                      title={s.cloudLifecycle ? cloudStatusLabel(s, statusLocale) : s.healthy ? healthyTitle : issueTitle}
-                    />
+                <button
+                  type="button"
+                  onClick={() =>
+                    s.managedCompute ? onOpenCloudDetail(s.managedCompute.id) : onSelectSsh(s.id)
+                  }
+                  className="flex min-w-0 flex-1 items-start gap-3 text-left"
+                >
+                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-gray-50 text-gray-500 ring-1 ring-gray-100">
+                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 12h14M5 12a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2M5 12a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2m-2-4h.01M17 16h.01"
+                      />
+                    </svg>
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate font-medium text-gray-900">{s.name}</span>
+                      <span
+                        className={cn(
+                          "size-2 shrink-0 rounded-full",
+                          s.cloudLifecycle
+                            ? cloudStatusDotClass(s.cloudLifecycle)
+                            : s.healthy
+                              ? "bg-emerald-500"
+                              : "bg-red-500",
+                        )}
+                        title={s.cloudLifecycle ? cloudStatusLabel(s, statusLocale) : s.healthy ? healthyTitle : issueTitle}
+                      />
+                    </div>
+                    <p className="mt-0.5 truncate font-mono text-[11px] text-gray-500">
+                      {s.ip} · {s.region} · {s.specs}
+                    </p>
                   </div>
-                  <p className="mt-0.5 truncate font-mono text-[11px] text-gray-500">
-                    {s.ip} · {s.region} · {s.specs}
-                  </p>
-                </div>
-              </button>
-              {s.managedCompute ? (
-                <div className="flex w-full min-w-0 flex-col gap-2 sm:w-56">
-                  <p className="text-[10px] text-gray-400 sm:text-right">{cloudCardHint}</p>
-                  {s.liveMetricRecordedAt ? (
-                    <p className="text-[9px] text-gray-400 sm:text-right">
-                      {telemetryLabels.recordedAt}:{" "}
-                      {new Date(s.liveMetricRecordedAt).toLocaleString(undefined, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      })}
-                    </p>
-                  ) : null}
-                  {s.liveHttpProbeSummary ? (
-                    <p className="text-[10px] font-medium text-violet-800 sm:text-right">
-                      <span className="text-gray-500">{telemetryLabels.httpProbe}: </span>
-                      {s.liveHttpProbeSummary}
-                    </p>
-                  ) : null}
-                  {s.liveContainerMemUsage ? (
-                    <p className="text-[10px] text-gray-700 sm:text-right">
-                      <span className="text-gray-500">{telemetryLabels.containerMem}: </span>
-                      {s.liveContainerMemUsage}
-                    </p>
-                  ) : null}
-                  <div className="flex flex-col gap-1 border-t border-gray-100 pt-2">
-                    <MiniProgress
-                      value={
-                        s.liveCpuPercent != null && Number.isFinite(s.liveCpuPercent)
-                          ? Math.round(Math.min(100, s.liveCpuPercent))
-                          : null
-                      }
-                      label={miniCpu}
-                    />
-                    <MiniProgress
-                      value={
-                        s.liveMemoryPercent != null && Number.isFinite(s.liveMemoryPercent)
-                          ? Math.round(Math.min(100, s.liveMemoryPercent))
-                          : null
-                      }
-                      label={miniRam}
-                    />
-                  </div>
-                  <div
-                    className="flex flex-wrap gap-1.5 border-t border-gray-100 pt-2 sm:justify-end"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      disabled={!cloudActions.canManage || cloudActions.busy}
-                      onClick={() => void cloudActions.onDelete(s.managedCompute!.id)}
-                      className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[11px] font-medium text-red-900 shadow-sm transition hover:bg-red-100 disabled:opacity-50"
+                </button>
+                {s.managedCompute ? (
+                  <div className="flex w-full min-w-0 flex-col gap-2 sm:w-56">
+                    <p className="text-[10px] text-gray-400 sm:text-right">{cloudCardHint}</p>
+                    {s.liveMetricRecordedAt ? (
+                      <p className="text-[9px] text-gray-400 sm:text-right">
+                        {telemetryLabels.recordedAt}:{" "}
+                        {new Date(s.liveMetricRecordedAt).toLocaleString(undefined, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })}
+                      </p>
+                    ) : null}
+                    {s.liveHttpProbeSummary ? (
+                      <p className="text-[10px] font-medium text-violet-800 sm:text-right">
+                        <span className="text-gray-500">{telemetryLabels.httpProbe}: </span>
+                        {s.liveHttpProbeSummary}
+                      </p>
+                    ) : null}
+                    {s.liveContainerMemUsage ? (
+                      <p className="text-[10px] text-gray-700 sm:text-right">
+                        <span className="text-gray-500">{telemetryLabels.containerMem}: </span>
+                        {s.liveContainerMemUsage}
+                      </p>
+                    ) : null}
+                    <div className="flex flex-col gap-1 border-t border-gray-100 pt-2">
+                      <MiniProgress
+                        value={
+                          s.liveCpuPercent != null && Number.isFinite(s.liveCpuPercent)
+                            ? Math.round(Math.min(100, s.liveCpuPercent))
+                            : null
+                        }
+                        label={miniCpu}
+                      />
+                      <MiniProgress
+                        value={
+                          s.liveMemoryPercent != null && Number.isFinite(s.liveMemoryPercent)
+                            ? Math.round(Math.min(100, s.liveMemoryPercent))
+                            : null
+                        }
+                        label={miniRam}
+                      />
+                    </div>
+                    <div
+                      className="flex flex-wrap gap-1.5 border-t border-gray-100 pt-2 sm:justify-end"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      {cloudActions.labels.delete}
-                    </button>
+                      <button
+                        type="button"
+                        disabled={!cloudActions.canManage || cloudActions.busy}
+                        onClick={() => void cloudActions.onDelete(s.managedCompute!.id)}
+                        className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[11px] font-medium text-red-900 shadow-sm transition hover:bg-red-100 disabled:opacity-50"
+                      >
+                        {cloudActions.labels.delete}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="flex w-full shrink-0 flex-col justify-center gap-1.5 sm:w-52">
-                  <MiniProgress value={s.cpu} label={miniCpu} />
-                  <MiniProgress value={s.ram} label={miniRam} />
-                  <MiniProgress value={s.disk} label={miniDisk} />
-                </div>
-              )}
-            </div>
-          </li>
+                ) : (
+                  <div className="flex w-full shrink-0 flex-col justify-center gap-1.5 sm:w-52">
+                    <MiniProgress value={s.cpu} label={miniCpu} />
+                    <MiniProgress value={s.ram} label={miniRam} />
+                    <MiniProgress value={s.disk} label={miniDisk} />
+                  </div>
+                )}
+              </div>
+            </li>
           );
         })}
       </ul>

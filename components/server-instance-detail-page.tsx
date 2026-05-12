@@ -32,7 +32,7 @@ import {
   postComputeInstanceStop,
   type ComputeInstance,
 } from "@/lib/synthosia-api";
-import { Copy } from "lucide-react";
+import { CloudBackup, CloudSync, CloudUpload, Copy, HardDriveUpload, Play, RotateCcw, Square, Trash } from "lucide-react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -119,12 +119,50 @@ export function ServerInstanceDetailPage({
     [cloudBindingId],
   );
 
+
   const serverRow: ServerRow | null = useMemo(
     () => (service ? mapComputeInstanceToRow(service) : null),
     [service],
   );
 
   const cloudLifecycle: CloudLifecycle = service ? mapComputeLifecycleFromStatus(service.status) : "unknown";
+
+  // Starts of Header Actions
+
+  // Fixed parans
+  const computePlane = true;
+  const railwayMissing = false;
+
+  const running = cloudLifecycle === "running";
+  const stopped = cloudLifecycle === "stopped";
+  const errorLc = cloudLifecycle === "error";
+
+  const computeTransitioning =
+    computePlane &&
+    (cloudLifecycle === "provisioning" ||
+      cloudLifecycle === "pending_deploy" ||
+      cloudLifecycle === "reconfiguring" ||
+      cloudLifecycle === "removing");
+
+  const computeOnlineActions = running && !computeTransitioning;
+  const computeOfflineActions = stopped && !computeTransitioning;
+  const computeErrorSurface = errorLc && !computeTransitioning;
+
+  const hasDeployment =
+    service?.status === "running" ||
+    service?.status === "stopped" ||
+    service?.status === "error" ||
+    service?.status === "reconfiguring"
+
+  const canStop = running && !railwayMissing;
+  const canRestart =
+    hasDeployment &&
+    !railwayMissing &&
+    cloudLifecycle !== "pending_deploy" &&
+    cloudLifecycle !== "provisioning" &&
+    cloudLifecycle !== "reconfiguring";
+
+  // Ends of Header Actions
 
   const runDelete = useCallback(async () => {
     if (!canManage) return;
@@ -181,11 +219,12 @@ export function ServerInstanceDetailPage({
 
   const tabCls = (active: boolean) =>
     cn(
-      "relative whitespace-nowrap pb-3 text-sm font-medium transition-colors",
+      "relative whitespace-nowrap pb-3 text-sm font-medium transition-colors cursor-pointer",
       active ? "text-[var(--brand-accent-2)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]",
       active &&
       "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:rounded-full after:bg-[var(--brand-accent-2)]",
     );
+
 
   const metricStripLabels = useMemo(
     () => ({
@@ -368,7 +407,7 @@ export function ServerInstanceDetailPage({
             : String(value);
 
         return (
-          <div key={key} className="group flex justify-between items-center px-4 py-2 duration-300 hover:duration-300 rounded-2xl">
+          <div key={key} className="group flex justify-between items-center px-4 py-1.5 duration-300 hover:duration-300 rounded-2xl">
             <div className="flex flex-col">
               <p className="font-semibold">{formatCamelCase(key)}</p>
               <p className="text-sm break-all">{parsedValue}</p>
@@ -393,7 +432,7 @@ export function ServerInstanceDetailPage({
         <button
           type="button"
           onClick={onBack}
-          className="mb-4 text-sm font-medium text-[var(--brand-accent-2)] hover:underline"
+          className="mb-4 text-sm cursor-pointer font-medium text-[var(--brand-accent-2)] hover:underline"
         >
           ← {sm.instanceDetailBack}
         </button>
@@ -431,16 +470,89 @@ export function ServerInstanceDetailPage({
             </dl>
           </motion.div>
 
+          {/* Actions Header */}
           <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center lg:flex-col lg:items-end">
-            <span
-              className={cn(
-                "inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide",
-                cloudStatusBadgeClass(cloudLifecycle),
+            <div className={cn(
+              "w-full gap-4 h-10 flex items-center justify-around rounded-2xl border bg-[var(--surface-panel)] p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
+              cloudStatusBadgeClass(cloudLifecycle),
+            )}>
+              {/* Status */}
+              <span
+                className={cn(
+                  "inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide",
+                  cloudStatusBadgeClass(cloudLifecycle),
+                )}
+              >
+                <span className={cn("size-2 rounded-full", cloudStatusDotClass(cloudLifecycle))} />
+                {cloudStatusLabel(serverRow, sm)}
+              </span>
+
+              {computeOfflineActions && (
+                <>
+                  {/* Start */}
+                  <button
+                    disabled={!canManage || lifecycleBusy}
+                    onClick={() => { runStart(); }}
+                  >
+                    <Play className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
+                  </button>
+
+                  {/* Deploy */}
+                  <button
+                    disabled={!canManage || lifecycleBusy}
+                    onClick={() => { setTab("configuration") }}
+                  >
+                    <CloudUpload className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
+                  </button>
+                </>
               )}
-            >
-              <span className={cn("size-2 rounded-full", cloudStatusDotClass(cloudLifecycle))} />
-              {cloudStatusLabel(serverRow, sm)}
-            </span>
+
+              {computeOnlineActions && (
+                <>
+                  {/* Stop */}
+                  {canStop && (
+                    <button
+                      disabled={!canManage || lifecycleBusy}
+                      onClick={() => {
+                        if (window.confirm(sm.instanceDetailConfirmStop)) runStop();
+                      }}
+                    >
+                      <Square className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
+                    </button>
+                  )}
+
+                  {/* Restart */}
+                  {canRestart && (
+                    <button
+                      disabled={!canManage || lifecycleBusy}
+                      onClick={() => { }}
+                    >
+                      <RotateCcw className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
+                    </button>
+                  )}
+                </>
+              )}
+
+              {/* Deploy */}
+              {computeErrorSurface && (
+                <button
+                  disabled={!canManage || lifecycleBusy}
+                  onClick={() => { setTab("configuration") }}
+                >
+                  <CloudUpload className="w-5 h-5 cursor-pointer duration-200 hover:duration-200 hover:stroke-3" />
+                </button>
+              )}
+
+              {/* Delete */}
+              <button
+                disabled={!canManage || lifecycleBusy}
+                onClick={() => {
+                  if (window.confirm(sm.instanceDetailConfirmDelete)) runDelete();
+                }}
+              >
+                <Trash className="w-5 h-5 cursor-pointer text-[#dc2626] duration-200 hover:duration-200 hover:stroke-3" />
+              </button>
+            </div>
           </div>
         </div>
 

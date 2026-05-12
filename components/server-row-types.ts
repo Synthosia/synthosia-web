@@ -79,16 +79,29 @@ export type ServerRow = {
 };
 
 export function cloudStatusBadgeClass(lc: CloudLifecycle | undefined): string {
-  if (!lc) return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100";
-  if (lc === "running") return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100";
-  if (lc === "pending_deploy") return "bg-amber-50 text-amber-900 ring-1 ring-amber-100";
-  if (lc === "provisioning" || lc === "reconfiguring") return "bg-sky-50 text-sky-900 ring-1 ring-sky-100";
-  if (lc === "removing") return "bg-orange-50 text-orange-900 ring-1 ring-orange-100";
-  if (lc === "error") return "bg-red-50 text-red-800 ring-1 ring-red-100";
-  if (lc === "stopped") return "bg-gray-100 text-gray-800 ring-1 ring-gray-200";
-  if (lc === "unknown") return "bg-violet-50 text-violet-900 ring-1 ring-violet-100";
-  return "bg-gray-50 text-gray-800 ring-1 ring-gray-100";
+  if (!lc) return "bg-emerald-50 text-emerald-800 ring-emerald-100";
+  if (lc === "running") return "bg-emerald-50 text-emerald-800 ring-emerald-100";
+  if (lc === "pending_deploy") return "bg-amber-50 text-amber-900 ring-amber-100";
+  if (lc === "provisioning" || lc === "reconfiguring") return "bg-sky-50 text-sky-900 ring-sky-100";
+  if (lc === "removing") return "bg-orange-50 text-orange-900 ring-orange-100";
+  if (lc === "error") return "bg-red-50 text-red-800 ring-red-100";
+  if (lc === "stopped") return "bg-gray-100 text-gray-800 ring-gray-200";
+  if (lc === "unknown") return "bg-violet-50 text-violet-900 ring-violet-100";
+  return "bg-gray-50 text-gray-800 ring-gray-100";
 }
+
+// cloudStatusBadgeClass Backup
+// export function cloudStatusBadgeClass(lc: CloudLifecycle | undefined): string {
+//   if (!lc) return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100";
+//   if (lc === "running") return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100";
+//   if (lc === "pending_deploy") return "bg-amber-50 text-amber-900 ring-1 ring-amber-100";
+//   if (lc === "provisioning" || lc === "reconfiguring") return "bg-sky-50 text-sky-900 ring-1 ring-sky-100";
+//   if (lc === "removing") return "bg-orange-50 text-orange-900 ring-1 ring-orange-100";
+//   if (lc === "error") return "bg-red-50 text-red-800 ring-1 ring-red-100";
+//   if (lc === "stopped") return "bg-gray-100 text-gray-800 ring-1 ring-gray-200";
+//   if (lc === "unknown") return "bg-violet-50 text-violet-900 ring-1 ring-violet-100";
+//   return "bg-gray-50 text-gray-800 ring-1 ring-gray-100";
+// }
 
 export function cloudStatusDotClass(lc: CloudLifecycle | undefined): string {
   if (!lc) return "bg-emerald-500";
