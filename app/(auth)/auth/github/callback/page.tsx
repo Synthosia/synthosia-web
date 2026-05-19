@@ -1,4 +1,4 @@
-import { GitHubCallbackClient } from "@/app/auth/github/callback/ui";
+import { GitHubCallbackClient } from "@/app/(auth)/auth/github/callback/ui";
 
 export const dynamic = "force-dynamic";
 
