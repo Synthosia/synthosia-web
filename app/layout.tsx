@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Lora, Space_Grotesk } from "next/font/google";
-import { AmbientBackground } from "@/components/ambient-background";
-import { NavigationProgress } from "@/components/navigation-progress";
-import { PageTransition } from "@/components/page-transition";
 import { LanguageProvider } from "@/components/language-provider";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
@@ -70,19 +65,13 @@ export default function RootLayout({
       className={`theme-light ${displayFont.variable} ${serifFont.variable} ${monoFont.variable} antialiased`}
     >
       <head>
-        {/* <!-- SimpleTracker — instale este snippet em todas as páginas e subdomínios. A escolha entre configuração padrão e específica é automática. --> */}
-        <script src="https://simpletk.synthosia.com/api/v1/js/01005.js" async></script>
+        {/* <!-- SimpleTracker --> */}
+        <script src="https://track.chefrenatamonteiro.com.br/api/v1/js/01004.js" async></script>
       </head>
-      <body className="surface-page min-h-dvh">
+      <body className="min-h-dvh">
         <ThemeProvider>
           <LanguageProvider>
-            <div className="platform-shell flex min-h-dvh flex-col">
-              <NavigationProgress />
-              <AmbientBackground />
-              <SiteHeader />
-              <PageTransition>{children}</PageTransition>
-              <SiteFooter />
-            </div>
+            {children}
           </LanguageProvider>
         </ThemeProvider>
       </body>

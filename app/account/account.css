@@ -1,0 +1,144 @@
+.theme-account {
+  /* Cloud Premium Pink Theme */
+  --background: #fcfbfa;
+  --foreground: #1f1720;
+  
+  --surface-100: #ffffff;
+  --surface-200: #fcfbfa;
+  --surface-300: #f7f4f3;
+  --surface-400: #f3efee;
+  --surface-500: #ebe5e4;
+  
+  --accent: #e85d8e;
+  --accent-hover: #d94c7f;
+  --accent-active: #bf3b6b;
+  --accent-soft: #fde8ef;
+  --accent-soft-2: #fff1f5;
+  
+  --error: #cf2d56; /* Warmer red/pinkish error */
+  --success: #1f8a65;
+  --warning: #f5a623;
+  
+  --page-bg: #fcfbfa;
+  --text-primary: #1f1720;
+  --text-secondary: rgba(31, 23, 32, 0.62);
+  --text-muted: rgba(31, 23, 32, 0.42);
+  
+  --surface-page: #fcfbfa;
+  --surface-panel: #ffffff;
+  --surface-raised: #f7f4f3;
+  --surface-interactive: #fde8ef;
+  
+  --border-subtle: rgba(31, 23, 32, 0.08);
+  --header-bg: rgba(252, 251, 250, 0.85);
+  
+  --button-primary-bg: #e85d8e;
+  --button-primary-text: #ffffff;
+  --button-secondary-bg: #f7f4f3;
+  --button-secondary-text: #1f1720;
+  
+  --focus-ring: rgba(232, 93, 142, 0.4);
+  
+  --console-chrome-bg: rgba(252, 251, 250, 0.95);
+  --console-rail-bg: #f7f4f3;
+  --console-rail-border: rgba(31, 23, 32, 0.06);
+  --console-search-bg: #ffffff;
+  --console-table-header: #f3efee;
+  
+  --font-display: "Geist", "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "Berkeley Mono", "JetBrains Mono", ui-monospace, monospace;
+}
+
+.theme-dark .theme-account,
+.theme-account.theme-dark {
+  /* Minimalist dark mode with pink hues */
+  --background: #0d0c11;
+  --foreground: #fcfbfa;
+  --surface-100: #121118;
+  --surface-200: #16151c;
+  --surface-300: #1c1a24;
+  --surface-400: #24212e;
+  --surface-500: #2c2838;
+  
+  --accent: #e85d8e;
+  --accent-hover: #d94c7f;
+  --accent-active: #bf3b6b;
+  --accent-soft: rgba(232, 93, 142, 0.15);
+  --accent-soft-2: rgba(232, 93, 142, 0.08);
+  
+  --page-bg: #0d0c11;
+  --text-primary: #fcfbfa;
+  --text-secondary: rgba(252, 251, 250, 0.65);
+  --text-muted: rgba(252, 251, 250, 0.45);
+  
+  --surface-page: #0d0c11;
+  --surface-panel: #121118;
+  --surface-raised: #16151c;
+  --surface-interactive: #1c1a24;
+  
+  --border-subtle: rgba(252, 251, 250, 0.1);
+  --header-bg: rgba(13, 12, 17, 0.85);
+  
+  --button-primary-bg: #e85d8e;
+  --button-primary-text: #ffffff;
+  --button-secondary-bg: #1c1a24;
+  --button-secondary-text: #fcfbfa;
+  
+  --console-chrome-bg: #0d0c11;
+  --console-rail-bg: #121118;
+  --console-rail-border: rgba(252, 251, 250, 0.08);
+  --console-search-bg: #16151c;
+  --console-table-header: #121118;
+}
+
+.theme-account * {
+  border-color: var(--border-subtle);
+}
+
+.theme-account {
+  background: var(--page-bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Headings */
+.theme-account h1, .theme-account h2, .theme-account h3, .theme-account h4, .theme-account h5, .theme-account h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+}
+
+.theme-account h1 { letter-spacing: -0.04em; }
+
+.theme-account .font-mono {
+  font-family: var(--font-mono);
+}
+
+/* UI Elements */
+.theme-account .surface-panel {
+  background: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+}
+
+.theme-account .shadow-premium {
+  box-shadow: 0 4px 20px -2px rgba(0,0,0,0.03), 0 0 3px rgba(0,0,0,0.02);
+}
+
+.theme-account .shadow-hover {
+  box-shadow: 0 8px 30px -4px rgba(232, 93, 142, 0.08), 0 0 3px rgba(0,0,0,0.02);
+}
+
+.theme-account ::selection {
+  background: var(--accent-soft);
+  color: var(--accent-active);
+}
+
+.theme-account .console-glass {
+  background: var(--header-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-subtle);
+}
