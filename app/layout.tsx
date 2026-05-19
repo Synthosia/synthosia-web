@@ -66,8 +66,7 @@ export default function RootLayout({
     >
       <head>
         {/* <!-- SimpleTracker --> */}
-        <script src="https://track.chefrenatamonteiro.com.br/api/v1/js/01004.js" async></script>
-      </head>
+        <script src="https://simpletk.synthosia.com/api/v1/js/01007.js" async></script>      </head>
       <body className="min-h-dvh">
         <ThemeProvider>
           <LanguageProvider>
