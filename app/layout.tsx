@@ -65,7 +65,7 @@ export default function RootLayout({
       className={`theme-light ${displayFont.variable} ${serifFont.variable} ${monoFont.variable} antialiased`}
     >
       <head>
-        <script src="https://prod.synthosia.com/api/v1/js/0101Q.js" async></script>
+        <script src="https://simple.synthosia.com/api/v1/js/0101M.js" async></script>
       </head>
       <body className="min-h-dvh">
         <ThemeProvider>
