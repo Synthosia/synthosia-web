@@ -65,7 +65,7 @@ export default function RootLayout({
       className={`theme-light ${displayFont.variable} ${serifFont.variable} ${monoFont.variable} antialiased`}
     >
       <head>
-          <script src="https://simple.synthosia.com/api/v1/js/0101N.js" async></script>
+          <script src="https://test.vextor.app/api/v1/js/0101N.js" async></script>
       </head>
       <body className="min-h-dvh">
         <ThemeProvider>
